@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>WhatsApp Batch Sender — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    .page-content{padding:20px;max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:20px;min-height:calc(100vh - 56px)}
+    
+    .grid-layout{display:grid;grid-template-columns:1fr 400px;gap:20px;align-items:start}
+    @media(max-width:1024px){.grid-layout{grid-template-columns:1fr}}
+    
+    .panel-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;display:flex;flex-direction:column;overflow:hidden}
+    body.light-mode .panel-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    
+    .p-head{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center}
+    .p-title{font-family:var(--font-display);font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+    .p-body{padding:20px;flex:1;}
+    
+    .filter-bar{display:flex;gap:12px;margin-bottom:16px;align-items:center}
+    .search-sub{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#E8F0F7;font-size:13px;padding:9px 12px;outline:none}
+    body.light-mode .search-sub{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:#0D1E2E}
+    
+    .table-sub-wrap{max-height:500px;overflow-y:auto;border:1px solid rgba(255,255,255,.05);border-radius:10px}
+    table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}
+    th,td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.05)}
+    th{font-size:11px;font-weight:700;color:var(--tx-muted);text-transform:uppercase;background:rgba(255,255,255,.02);position:sticky;top:0;backdrop-filter:blur(8px)}
+    
+    .sel-box{width:18px;height:18px;cursor:pointer;accent-color:#00C9B1}
+    
+    .msg-box{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#E8F0F7;font-size:13px;padding:12px;outline:none;min-height:160px;font-family:inherit;margin-bottom:12px;resize:vertical}
+    body.light-mode .msg-box{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:#0D1E2E}
+    
+    .var-chips{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .var-chip{background:rgba(0,201,177,.1);color:#00C9B1;border:1px solid rgba(0,201,177,.2);border-radius:6px;font-size:11px;padding:4px 8px;cursor:copy;font-weight:600}
+    
+    .btn-row{display:flex;gap:12px;flex-wrap:wrap}
+    .btn-auto{flex:1;padding:12px;background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border:none;border-radius:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+    .btn-step{flex:1;padding:12px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);color:#60A5FA;border-radius:10px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+    .btn-stop{padding:12px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);color:#F87171;border-radius:10px;font-weight:700;cursor:pointer;display:none;align-items:center;justify-content:center;gap:6px}
+    
+    .status-log{margin-top:20px;background:rgba(0,0,0,.2);border-radius:10px;padding:12px;max-height:200px;overflow-y:auto;font-size:11px;font-family:monospace;color:var(--tx-muted)}
+    .log-item{padding:4px 0;display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,.05)}
+    .status-opened{color:#60A5FA}.status-skipped{color:#F87171}.status-pending{color:#F5A623}
+    
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
+      .menu-toggle{display:flex}.main-area{margin-left:0}
+    }
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <div style="display:flex;min-height:100vh">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div>
+        <div class="sb-shop-chip"><div class="sb-shop-av">🛒</div><div><div class="sb-shop-name" id="sb-shop">Loading...</div><div class="sb-shop-plan shoppl" id="sb-plan">FREE</div></div></div>
+      </div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a>
+        <a href="pos.html" class="nav-link"><span class="nav-ico">💳</span>New Sale / POS</a>
+        <a href="inventory.html" class="nav-link"><span class="nav-ico">📦</span>Inventory</a>
+        <a href="customers.html" class="nav-link"><span class="nav-ico">👥</span>Customers</a>
+        <a href="bills.html" class="nav-link"><span class="nav-ico">🧾</span>Bills</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">REPORTS & AUTO</div>
+        <a href="reports.html" class="nav-link"><span class="nav-ico">📊</span>Reports</a>
+        <a href="whatsapp-batch.html" class="nav-link active"><span class="nav-ico">💬</span>WhatsApp Batch</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">CUSTOMER PORTAL</div>
+        <a href="shop-requests.html" class="nav-link"><span class="nav-ico">🔔</span>Requests</a>
+        
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="settings.html" class="nav-link"><span class="nav-ico">⚙️</span>Settings</a>
+      </nav>
+      <div class="sb-footer">
+        <div class="upgrade-card"><div class="upgrade-title">⚡ Alerts Online</div><button class="upgrade-btn">Compliant Web System</button></div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-area">
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div class="topbar-title">💬 WhatsApp Batch Sender</div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="user-pill" onclick="location.href='settings.html'"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="page-content">
+        <div class="grid-layout">
+          
+          <!-- LEFT: Customer Selection -->
+          <div class="panel-card">
+            <div class="p-head">
+              <div class="p-title">👥 Select Customers</div>
+              <div style="font-size:12px;color:var(--tx-muted)"><span id="sel-count">0</span> Selected</div>
+            </div>
+            <div class="p-body">
+              <div class="filter-bar">
+                <select class="search-sub" id="c-filter" style="max-width:140px" onchange="renderCustTable()">
+                  <option value="due">With Dues Only</option>
+                  <option value="all">All Customers</option>
+                </select>
+                <input type="text" class="search-sub" id="c-search" placeholder="Search by name..." oninput="renderCustTable()">
+              </div>
+              
+              <div class="table-sub-wrap">
+                <table id="cust-table">
+                  <thead>
+                    <tr>
+                      <th style="width:40px"><input type="checkbox" class="sel-box" id="sel-all" onclick="toggleAll(this)"></th>
+                      <th>Customer Name</th>
+                      <th>Phone</th>
+                      <th style="text-align:right">Due Balance</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cust-body">
+                    <tr><td colspan="4" style="text-align:center;padding:40px;opacity:.5">Loading customers...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          
+          <!-- RIGHT: Message Box & Controls -->
+          <div class="panel-card">
+            <div class="p-head">
+              <div class="p-title">📝 Message & Controls</div>
+            </div>
+            <div class="p-body">
+              
+              <div style="font-size:11px;color:rgba(232,240,247,.4);margin-bottom:8px">Dynamic Variables (Click to copy)</div>
+              <div class="var-chips">
+                <div class="var-chip" onclick="insVar('{name}')">{name}</div>
+                <div class="var-chip" onclick="insVar('{amount}')">{amount}</div>
+                <div class="var-chip" onclick="insVar('{shopname}')">{shopname}</div>
+              </div>
+              
+              <textarea class="msg-box" id="msg-body">Hello {name},
+Just a friendly reminder that your outstanding balance is {amount}. 
+Please clear it at your earliest convenience.
+
+Thank you!
+{shopname}</textarea>
+              
+              <div style="background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.2);color:#F5A623;padding:10px;border-radius:8px;font-size:11px;line-height:1.5;margin-bottom:16px">
+                <strong>Safety Warning:</strong> Max 50 customers per batch. The Auto sender will deliberately wait 2.5 seconds between opening tabs to respect WhatsApp Web limitations.
+              </div>
+
+              <div class="btn-row">
+                <button class="btn-auto" id="btn-start" onclick="startSender()">▶ Auto Send Batch</button>
+                <button class="btn-step" id="btn-step" onclick="nextManualStep()">⏯ Step-by-Step</button>
+                <button class="btn-stop" id="btn-stop" onclick="stopSender()">⏹ Stop</button>
+              </div>
+              
+              <div class="status-log" id="status-log">
+                <div style="text-align:center;opacity:.5;margin-top:40px">No active queue. Select customers and click Start.</div>
+              </div>
+              
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}})();
+    
+    let allCustomers = [];
+    let displayedCustomers = [];
+    let selectedSet = new Set();
+    let shopName = "My Shop";
+    
+    // Queue State
+    let queue = [];
+    let qIndex = 0;
+    let isSending = false;
+    let autoTimer = null;
+
+    async function initPage(){
+      try {
+        allCustomers = await DataService.getCustomers();
+        renderCustTable();
+      } catch(e) {
+        toast('Failed to load customers','error');
+        console.error(e);
+      }
+    }
+
+    function renderCustTable(){
+      const fType = document.getElementById('c-filter').value;
+      const term = document.getElementById('c-search').value.toLowerCase();
+      
+      displayedCustomers = allCustomers.filter(c => {
+         if(fType === 'due' && (c.balance || 0) <= 0) return false;
+         if(term && (!c.name || !c.name.toLowerCase().includes(term))) return false;
+         return true;
+      });
+      
+      const bd = document.getElementById('cust-body');
+      if(displayedCustomers.length===0){
+         bd.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:30px;opacity:.5">No customers match.</td></tr>`;
+         return;
+      }
+      
+      let h='';
+      displayedCustomers.forEach(c => {
+         const checked = selectedSet.has(c.id) ? 'checked' : '';
+         const bal = c.balance||0;
+         h += `
+         <tr onclick="toggleCust('${c.id}')" style="cursor:pointer">
+           <td onclick="event.stopPropagation()"><input type="checkbox" class="sel-box cb-cust" value="${c.id}" ${checked} onclick="toggleCust('${c.id}';event.stopPropagation())"></td>
+           <td style="font-weight:600">${c.name}</td>
+           <td style="color:var(--tx-muted)">${c.phone||'-'}</td>
+           <td style="text-align:right;color:${bal>0?'#F87171':'inherit'}">${fmtCur(bal)}</td>
+         </tr>`;
+      });
+      bd.innerHTML = h;
+      updateSelCount();
+    }
+
+    function toggleCust(id, ev){
+       if(ev) ev.stopPropagation();
+       if(selectedSet.has(id)) selectedSet.delete(id);
+       else selectedSet.add(id);
+       
+       const cb = document.querySelector(`.cb-cust[value="${id}"]`);
+       if(cb) cb.checked = selectedSet.has(id);
+       updateSelCount();
+    }
+
+    function toggleAll(el){
+       if(el.checked){
+          displayedCustomers.forEach(c => selectedSet.add(c.id));
+       } else {
+          selectedSet.clear();
+       }
+       document.querySelectorAll('.cb-cust').forEach(cb => cb.checked = el.checked);
+       updateSelCount();
+    }
+
+    function updateSelCount(){
+       document.getElementById('sel-count').textContent = selectedSet.size;
+       if(selectedSet.size > 50) {
+          toast('Warning: Maximum recommended batch is 50 to prevent WhatsApp bans.', 'warning');
+       }
+    }
+
+    function insVar(val){
+       const box = document.getElementById('msg-body');
+       const sP = box.selectionStart;
+       const eP = box.selectionEnd;
+       const t = box.value;
+       box.value = t.substring(0, sP) + val + t.substring(eP);
+       box.focus();
+       box.selectionEnd = sP + val.length;
+       toast('Copied ' + val);
+    }
+
+    function generateUrl(cust){
+       let raw = document.getElementById('msg-body').value;
+       raw = raw.replace(/{name}/g, cust.name || 'Customer');
+       raw = raw.replace(/{amount}/g, fmtCur(cust.balance || 0));
+       raw = raw.replace(/{shopname}/g, shopName);
+       
+       let p = cust.phone || '';
+       p = p.replace(/[^\d]/g, '');
+       if(p.length>0 && p.startsWith('0')) p = '92' + p.substring(1);
+       if(p.length===0) return null;
+       
+       return `https://wa.me/${p}?text=${encodeURIComponent(raw)}`;
+    }
+
+    function prepareQueue(){
+       if(selectedSet.size === 0){ toast('Select at least one customer', 'error'); return false; }
+       if(!document.getElementById('msg-body').value.trim()){ toast('Message cannot be empty', 'error'); return false; }
+       
+       queue = [];
+       // Build queue objects
+       selectedSet.forEach(id => {
+          const c = allCustomers.find(x=>x.id===id);
+          if(c) queue.push({ c, status: 'pending' });
+       });
+       qIndex = 0;
+       
+       document.getElementById('btn-start').style.display = 'none';
+       document.getElementById('btn-step').style.display = 'none';
+       document.getElementById('btn-stop').style.display = 'flex';
+       
+       renderLog();
+       return true;
+    }
+
+    function renderLog(){
+       const l = document.getElementById('status-log');
+       if(queue.length===0) return;
+       let h = `<div style="padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.1);margin-bottom:10px;display:flex;justify-content:space-between">
+         <strong>Queue Progress: ${qIndex}/${queue.length}</strong>
+       </div>`;
+       
+       queue.forEach((item, idx) => {
+          let sColor = item.status === 'opened' ? 'status-opened' : (item.status === 'skipped' ? 'status-skipped' : 'status-pending');
+          let icon = item.status === 'opened' ? '✅' : (item.status === 'skipped' ? '⚠️' : '⏳');
+          
+          h += `<div class="log-item ${idx===qIndex?'active-row':''}">
+            <span>${icon} ${item.c.name}</span>
+            <span class="${sColor}">${item.status.toUpperCase()}</span>
+          </div>`;
+       });
+       l.innerHTML = h;
+    }
+
+    function startSender(){
+       if(!prepareQueue()) return;
+       isSending = true;
+       toast('Auto batch started! Keep this window open.', 'success');
+       processNext();
+    }
+
+    function nextManualStep(){
+       if(qIndex === 0 && !prepareQueue()) return;
+       isSending = false;
+       processNext();
+    }
+
+    function stopSender(){
+       isSending = false;
+       clearTimeout(autoTimer);
+       toast('Batch sequence paused', 'warning');
+       document.getElementById('btn-start').style.display = 'flex';
+       document.getElementById('btn-start').textContent = '▶ Resume Auto Send';
+       document.getElementById('btn-step').style.display = 'flex';
+       document.getElementById('btn-stop').style.display = 'none';
+       renderLog();
+    }
+
+    function processNext(){
+       if(qIndex >= queue.length){
+          toast('Batch finished completely!', 'success');
+          stopSender();
+          document.getElementById('btn-start').textContent = '▶ Auto Send Batch';
+          return;
+       }
+       
+       const item = queue[qIndex];
+       const url = generateUrl(item.c);
+       
+       if(!url){
+          item.status = 'skipped';
+          qIndex++;
+          renderLog();
+          if(isSending) autoTimer = setTimeout(processNext, 500);
+          return;
+       }
+       
+       item.status = 'opened';
+       renderLog();
+       window.open(url, '_blank');
+       qIndex++;
+       
+       if(isSending){
+          // 2.5 seconds wait per WhatsApp policies / limits
+          autoTimer = setTimeout(processNext, 2500);
+       }
+    }
+
+    // Base logic
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+    function signOut(){firebase.auth().signOut().then(()=>location.href='login.html')}
+    firebase.auth().onAuthStateChanged(async user=>{
+      if(!user) location.href='login.html';
+      else {
+         const snap = await db.collection('users').doc(user.uid).get();
+         if(snap.exists){
+            const d = snap.data();
+            window.shopId = d.shopId;
+            shopName = d.shopName || "My Shop";
+            document.getElementById('sb-shop').textContent = d.shopName || 'My Shop';
+            document.getElementById('user-nm').textContent = user.email.split('@')[0];
+            document.getElementById('user-av').textContent = user.email[0].toUpperCase();
+            initPage();
+         } else {
+            location.href='setup.html';
+         }
+      }
+    });
+  </script>
+</body>
+</html>

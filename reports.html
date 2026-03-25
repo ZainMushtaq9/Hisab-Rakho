@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Reports — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    .page-content{padding:20px;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px;min-height:calc(100vh - 56px)}
+    
+    .filter-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px}
+    body.light-mode .filter-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    
+    .fc-row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+    .fg{margin-bottom:0;flex:1;min-width:200px}
+    .fl{display:block;font-size:11px;font-weight:700;color:var(--tx-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+    .fi{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#E8F0F7;font-size:14px;padding:11px 14px;outline:none;font-family:inherit;min-height:44px}
+    body.light-mode .fi{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:#0D1E2E}
+    .fi:focus{border-color:#00C9B1;box-shadow:0 0 0 3px rgba(0,201,177,.1)}
+    select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(232,240,247,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+    select.fi option{background:#0D1E2E;color:#E8F0F7}
+    body.light-mode select.fi option{background:#fff;color:#0D1E2E}    
+    .date-presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .dbnd{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--tx-muted);cursor:pointer;transition:all .15s}
+    body.light-mode .dbnd{border-color:rgba(0,0,0,.1);color:rgba(13,30,46,.5)}
+    .dbnd:hover{border-color:rgba(0,201,177,.3);color:#00C9B1}
+    .dbnd.active{background:rgba(0,201,177,.1);border-color:#00C9B1;color:#00C9B1}
+    
+    .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:8px}
+    body.light-mode .kpi-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    .kpi-lbl{font-size:12px;font-weight:600;color:var(--tx-muted)}
+    .kpi-val{font-family:var(--font-display);font-size:24px;font-weight:800}
+    .kpi-sub{font-size:11px;color:rgba(232,240,247,.3)}
+    
+    .data-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;overflow:hidden;flex:1;display:flex;flex-direction:column}
+    body.light-mode .data-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    .dc-header{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center}
+    .dc-title{font-family:var(--font-display);font-size:16px;font-weight:700}
+    .dc-opts{display:flex;gap:8px}
+    .btn-export{padding:8px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;color:var(--tx-primary);transition:all .15s}
+    .btn-export:hover{background:rgba(255,255,255,.1)}
+    body.light-mode .btn-export{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:#0D1E2E}body.light-mode .btn-export:hover{background:#E2E8F0}
+    
+    .table-wrap{flex:1;overflow-x:auto}
+    table{width:100%;border-collapse:collapse;text-align:left;font-size:13px}
+    th,td{padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.05)}
+    body.light-mode th, body.light-mode td{border-bottom-color:rgba(0,0,0,.05)}
+    th{font-size:11px;font-weight:700;color:var(--tx-muted);text-transform:uppercase;letter-spacing:.5px;background:rgba(255,255,255,.02);white-space:nowrap}
+    body.light-mode th{background:rgba(0,0,0,.02)}
+    tr:hover td{background:rgba(255,255,255,.02)}body.light-mode tr:hover td{background:rgba(0,0,0,.02)}
+    
+    .text-right{text-align:right}
+    .pos-val{color:#34D399;font-weight:600}
+    .neg-val{color:#F87171;font-weight:600}
+    .emp-state{text-align:center;padding:60px 20px;color:rgba(232,240,247,.3)}
+    .loading-overlay{position:fixed;inset:0;background:rgba(4,13,18,.8);display:flex;align-items:center;justify-content:center;z-index:999}
+    .loader{width:40px;height:40px;border:3px solid rgba(0,201,177,.15);border-top-color:#00C9B1;border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    
+    @media(max-width:1024px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
+      .menu-toggle{display:flex}.main-area{margin-left:0}
+      .kpi-grid{grid-template-columns:1fr;gap:12px}
+      .fc-row{flex-direction:column;align-items:stretch}
+      .page-content{padding:12px}
+    }
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+
+  <div class="loading-overlay" id="loading"><div class="loader"></div></div>
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <div style="display:flex;min-height:100vh">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div>
+        <div class="sb-shop-chip"><div class="sb-shop-av">🛒</div><div><div class="sb-shop-name" id="sb-shop">Loading...</div><div class="sb-shop-plan shoppl" id="sb-plan">FREE</div></div></div>
+      </div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a>
+        <a href="pos.html" class="nav-link"><span class="nav-ico">💳</span>New Sale / POS</a>
+        <a href="inventory.html" class="nav-link"><span class="nav-ico">📦</span>Inventory</a>
+        <a href="customers.html" class="nav-link"><span class="nav-ico">👥</span>Customers</a>
+        <a href="suppliers.html" class="nav-link"><span class="nav-ico">🚚</span>Suppliers</a>
+        <a href="bills.html" class="nav-link"><span class="nav-ico">🧾</span>Bills</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">FINANCE</div>
+        <a href="expenses.html" class="nav-link"><span class="nav-ico">💸</span>Expenses</a>
+        <a href="daily-cash.html" class="nav-link"><span class="nav-ico">💰</span>Daily Cash</a>
+        <a href="returns.html" class="nav-link"><span class="nav-ico">↩</span>Returns</a>
+        <a href="shop-items.html" class="nav-link"><span class="nav-ico">🏬</span>Shop Items</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">REPORTS & AUTO</div>
+        <a href="reports.html" class="nav-link active"><span class="nav-ico">📊</span>Reports</a>
+        <a href="whatsapp-batch.html" class="nav-link"><span class="nav-ico">💬</span>WhatsApp Batch</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">CUSTOMER PORTAL</div>
+        <a href="shop-requests.html" class="nav-link"><span class="nav-ico">🔔</span>Requests</a>
+        
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="settings.html" class="nav-link"><span class="nav-ico">⚙️</span>Settings</a>
+      </nav>
+      <div class="sb-footer">
+        <div class="upgrade-card">
+          <div class="upgrade-title">⚡ Upgrade to Pro</div>
+          <div class="upgrade-sub">Unlimited features</div>
+          <button class="upgrade-btn" onclick="location.href='subscription.html'">Rs. 999/month →</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-area">
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div class="topbar-title">📊 Business Reports</div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="user-pill" onclick="location.href='settings.html'"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div>
+          <button class="logout-btn" onclick="signOut()">⏻ Logout</button>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="page-content">
+
+        <!-- Filters -->
+        <div class="filter-card">
+          <div class="fc-row">
+            <div class="fg">
+              <label class="fl">Report Type</label>
+              <select class="fi" id="r-type" onchange="setupSubFilter();generateReport()">
+                <option value="sales">Overall Sales & Profit</option>
+                <option value="items">Item Performance (Products)</option>
+                <option value="customers">Customer Outstanding (Udhaar)</option>
+                <option value="expenses">Expenses Breakdown</option>
+              </select>
+            </div>
+            
+            <div class="fg" id="sub-filter-container" style="display:none">
+              <label class="fl" id="sub-filter-label">Filter</label>
+              <select class="fi" id="r-sub" onchange="generateReport()">
+              </select>
+            </div>
+            
+            <div class="fg">
+              <label class="fl">Start Date</label>
+              <input type="date" class="fi" id="r-start" onchange="clearPresets();generateReport()">
+            </div>
+            <div class="fg">
+              <label class="fl">End Date</label>
+              <input type="date" class="fi" id="r-end" onchange="clearPresets();generateReport()">
+            </div>
+          </div>
+          
+          <div class="date-presets" id="d-presets">
+            <button class="dbnd active" onclick="setPreset('today',this)">Today</button>
+            <button class="dbnd" onclick="setPreset('yesterday',this)">Yesterday</button>
+            <button class="dbnd" onclick="setPreset('week',this)">Last 7 Days</button>
+            <button class="dbnd" onclick="setPreset('month',this)">This Month</button>
+            <button class="dbnd" onclick="setPreset('all',this)">All Time</button>
+          </div>
+        </div>
+
+        <!-- KPIs -->
+        <div class="kpi-grid" id="kpi-banner">
+          <div class="kpi-card">
+            <div class="kpi-lbl" id="kpi-lbl-1">Total Revenue</div>
+            <div class="kpi-val" id="kpi-val-1">Rs. 0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-lbl" id="kpi-lbl-2">Net Profit</div>
+            <div class="kpi-val" id="kpi-val-2">Rs. 0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-lbl" id="kpi-lbl-3">Transactions</div>
+            <div class="kpi-val" id="kpi-val-3">0</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-lbl" id="kpi-lbl-4">Avg Sale Value</div>
+            <div class="kpi-val" id="kpi-val-4">Rs. 0</div>
+          </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="data-card">
+          <div class="dc-header">
+            <div class="dc-title" id="table-title">Report Data</div>
+            <div class="dc-opts">
+              <button class="btn-export" id="btn-graph" onclick="toggleGraph()">Graph View 📊</button>
+              <button class="btn-export" onclick="exportCSV()">Download CSV 📥</button>
+            </div>
+          </div>
+          <div class="table-wrap" id="table-wrap-el">
+            <table id="report-table">
+              <thead id="table-head"></thead>
+              <tbody id="table-body">
+                <tr><td colspan="5" class="emp-state">Loading data...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-wrap" id="chart-wrap-el" style="display:none;padding:20px;height:400px;align-items:center;justify-content:center">
+            <canvas id="reportChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}})();
+    
+    let allBills = [];
+    let allInventory = [];
+    let allCustomers = [];
+    let allExpenses = [];
+    
+    // Core state
+    let reportData = []; 
+    let activeColumns = [];
+    let chartInstance = null;
+    let isGraphView = false;
+
+    async function initPage(){
+      try {
+        // Use DataService robust loading
+        allBills = await DataService.getBills();
+        allInventory = await DataService.getInventory();
+        allCustomers = await DataService.getCustomers();
+        allExpenses = await DataService.getExpenses();
+        
+        // Defaults to Today
+        const today = new Date();
+        document.getElementById('r-start').value = today.toISOString().split('T')[0];
+        document.getElementById('r-end').value = today.toISOString().split('T')[0];
+        
+        setupSubFilter();
+        generateReport();
+      } catch(e) {
+        toast('Failed to load data','error');
+        console.error(e);
+      } finally {
+        document.getElementById('loading').style.display='none';
+      }
+    }
+
+    function clearPresets(){
+      document.querySelectorAll('.dbnd').forEach(b=>b.classList.remove('active'));
+    }
+
+    function setPreset(type, btn){
+      clearPresets();
+      if(btn) btn.classList.add('active');
+      
+      const st = document.getElementById('r-start');
+      const en = document.getElementById('r-end');
+      const now = new Date();
+      
+      if(type==='today'){
+        st.value = now.toISOString().split('T')[0];
+        en.value = now.toISOString().split('T')[0];
+      } else if (type==='yesterday'){
+        const yest = new Date(now); yest.setDate(yest.getDate()-1);
+        st.value = yest.toISOString().split('T')[0];
+        en.value = yest.toISOString().split('T')[0];
+      } else if (type==='week'){
+        const w = new Date(now); w.setDate(w.getDate()-7);
+        st.value = w.toISOString().split('T')[0];
+        en.value = now.toISOString().split('T')[0];
+      } else if (type==='month'){
+        st.value = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        en.value = now.toISOString().split('T')[0];
+      } else if (type==='all'){
+        st.value = ''; en.value = '';
+      }
+      generateReport();
+    }
+
+    function generateReport(){
+      const type = document.getElementById('r-type').value;
+      const stVal = document.getElementById('r-start').value;
+      const enVal = document.getElementById('r-end').value;
+      
+      let startDate = stVal ? new Date(stVal) : new Date('2000-01-01');
+      startDate.setHours(0,0,0,0);
+      let endDate = enVal ? new Date(enVal) : new Date('2100-01-01');
+      endDate.setHours(23,59,59,999);
+      
+      const stTime = startDate.getTime();
+      const enTime = endDate.getTime();
+      
+      let subFilter = '';
+      if(document.getElementById('sub-filter-container').style.display !== 'none'){
+         subFilter = document.getElementById('r-sub').value;
+      }
+      
+      const filteredBills = allBills.filter(b => {
+        const ts = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt||Date.now()).getTime();
+        if(ts < stTime || ts > enTime) return false;
+        
+        if(type === 'sales' && subFilter && subFilter !== 'all'){
+           const isCredit = (b.paymentMethod === 'credit' || b.cashReceived < b.total);
+           const isCash = (b.paymentMethod === 'cash' || b.cashReceived >= b.total);
+           if(subFilter === 'cash' && !isCash) return false;
+           if(subFilter === 'credit' && !isCredit) return false;
+        }
+        return true;
+      });
+      const filteredExp = allExpenses.filter(e => {
+        const dt = new Date(e.date||Date.now()).getTime();
+        return dt >= stTime && dt <= enTime;
+      });
+
+      if(type === 'sales') buildSalesReport(filteredBills);
+      else if (type === 'items') buildItemsReport(filteredBills, subFilter);
+      else if (type === 'customers') buildCustomerReport();
+      else if (type === 'expenses') buildExpenseReport(filteredExp);
+    }
+    
+    function setupSubFilter(){
+       const type = document.getElementById('r-type').value;
+       const cont = document.getElementById('sub-filter-container');
+       const lbl = document.getElementById('sub-filter-label');
+       const sel = document.getElementById('r-sub');
+       
+       sel.innerHTML = '';
+       if(type === 'sales'){
+          cont.style.display = 'block';
+          lbl.textContent = 'Payment Type';
+          sel.innerHTML = '<option value="all">All Methods</option><option value="cash">Cash Only</option><option value="credit">Credit / Udhaar</option>';
+       } else if (type === 'items') {
+          cont.style.display = 'block';
+          lbl.textContent = 'Compare Products';
+          let opts = '<option value="all">All Products</option>';
+          allInventory.forEach(i => {
+             opts += `<option value="${i.id}">${i.name}</option>`;
+          });
+          sel.innerHTML = opts;
+       } else {
+          cont.style.display = 'none';
+       }
+    }
+
+    // -- REPORT BUILDERS -- //
+
+    function buildSalesReport(bills){
+      document.getElementById('table-title').textContent = "Sales & Profit Analysis";
+      activeColumns = ["Date", "Bill No", "Customer", "Subtotal", "Discount", "Net Sale", "Cost", "Profit"];
+      
+      let totSale=0, totCost=0, txn=0;
+      reportData = bills.map(b => {
+        const ts = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt||Date.now());
+        let billCost = 0;
+        let billRev = 0;
+        
+        // Calculate item-level cost vs revenue (excluding global discount effect for simplicity, or approximating it)
+        const items = b.items || [];
+        items.forEach(itm => {
+           let pp = 0;
+           // find purchase price from inventory
+           const inv = allInventory.find(i=>i.id===itm.id);
+           if(inv) pp = inv.purchasePrice || 0;
+           billCost += (pp * itm.qty);
+           billRev += (itm.price * itm.qty);
+        });
+        
+        const discount = b.discount || 0;
+        const finalNet = (b.total || 0); // After discount
+        // Pro-rate cost if we applied a global discount? Let's just do Profit = FinalNet - BillCost
+        const profit = finalNet - billCost;
+        
+        totSale += finalNet;
+        totCost += billCost;
+        txn++;
+        
+        return [
+           formatDateTime(ts),
+           b.billNumber || b.id.substring(0,6).toUpperCase(),
+           b.customerName || 'Walk-in',
+           fmtCur(billRev),
+           fmtCur(discount),
+           fmtCur(finalNet),
+           fmtCur(billCost),
+           `<span class="${profit>=0?'pos-val':'neg-val'}">${fmtCur(profit)}</span>`
+        ];
+      });
+      
+      // Update KPIs
+      const netProfit = totSale - totCost;
+      updateKPIs(
+         "Total Net Sale", fmtCur(totSale),
+         "Net Profit", `<span style="color:${netProfit>=0?'#34D399':'#F87171'}">${fmtCur(netProfit)}</span>`,
+         "Bills Generated", txn,
+         "Avg Bill Value", txn>0 ? fmtCur(totSale/txn) : 'Rs. 0'
+      );
+      renderTable();
+      renderChart("Item Performance", reportData, 0, 3, 6); // Labels: ProductName, Data: Gross Rev, Net Profit
+    }
+
+    function buildItemsReport(bills, subFilterId) {
+      document.getElementById('table-title').textContent = "Item Performance";
+      activeColumns = ["Product Name", "Category", "Qty Sold", "Gross Revenue", "Avg Price", "Total Cost", "Total Profit"];
+      
+      const itemMap = {};
+      bills.forEach(b => {
+         const items = b.items || [];
+         items.forEach(itm => {
+            if(subFilterId && subFilterId !== 'all' && itm.id !== subFilterId) return;
+            
+            if(!itemMap[itm.id]) itemMap[itm.id] = { qty:0, rev:0, cost:0, name:itm.name };
+            itemMap[itm.id].qty += itm.qty;
+            itemMap[itm.id].rev += (itm.qty * itm.price);
+            
+            const inv = allInventory.find(i=>i.id===itm.id);
+            const pp = inv ? (inv.purchasePrice||0) : 0;
+            itemMap[itm.id].cost += (itm.qty * pp);
+         });
+      });
+      
+      let totQty=0, totRev=0, totCost=0;
+      reportData = [];
+      for(let key in itemMap) {
+         let info = itemMap[key];
+         let profit = info.rev - info.cost;
+         let inv = allInventory.find(i=>i.id===key);
+         let cat = inv ? (inv.category||'-') : '-';
+         
+         totQty += info.qty;
+         totRev += info.rev;
+         totCost += info.cost;
+         
+         reportData.push([
+            info.name,
+            cat,
+            info.qty,
+            fmtCur(info.rev),
+            fmtCur(info.qty>0 ? info.rev/info.qty : 0),
+            fmtCur(info.cost),
+            `<span class="${profit>=0?'pos-val':'neg-val'}">${fmtCur(profit)}</span>`
+         ]);
+      }
+      
+      // sort by qty sold desc
+      reportData.sort((a,b)=> b[2]-a[2]);
+      
+      updateKPIs(
+         "Total Units Sold", totQty,
+         "Item Revenue", fmtCur(totRev),
+         "Items Sold (Unique)", Object.keys(itemMap).length,
+         "Item Profit", `<span style="color:${(totRev-totCost)>=0?'#34D399':'#F87171'}">${fmtCur(totRev-totCost)}</span>`
+      );
+      renderTable();
+      renderChart("Item Performance", reportData, 0, 3, 6); // Data1: Rev, Data2: Profit
+    }
+
+    function buildCustomerReport() {
+      document.getElementById('table-title').textContent = "Customer Outstanding (Udhaar)";
+      activeColumns = ["Customer Name", "Phone", "Outstanding Balance", "Total Limit", "Status"];
+      
+      let totBal = 0, totCust = 0;
+      reportData = allCustomers.map(c => {
+         const bal = c.balance || 0;
+         totBal += bal;
+         if(bal>0) totCust++;
+         
+         const stat = bal>0 ? '<span class="neg-val">Pending</span>' : '<span style="color:var(--tx-muted)">Clear</span>';
+         return [
+            c.name,
+            c.phone || '-',
+            `<span style="color:#F87171;font-weight:700">${fmtCur(bal)}</span>`,
+            '-',
+            stat
+         ];
+      });
+      
+      // Sort desc balance
+      reportData.sort((a,b)=> parseFloat(b[2].replace(/[^\d.-]/g, '')) - parseFloat(a[2].replace(/[^\d.-]/g, '')));
+      
+      updateKPIs(
+         "Total Outstanding", `<span style="color:#F87171">${fmtCur(totBal)}</span>`,
+         "Customers in Debt", totCust,
+         "Total Customers", allCustomers.length,
+         "Avg Debt Amount", totCust>0 ? fmtCur(totBal/totCust) : 'Rs. 0'
+      );
+      renderTable();
+      renderChart("Outstanding Balances", reportData, 0, 2); // Data1: Balances
+    }
+
+    function buildExpenseReport(expenses) {
+      document.getElementById('table-title').textContent = "Expenses Breakdown";
+      activeColumns = ["Date", "Category", "Amount", "Description"];
+      
+      let totExp = 0;
+      reportData = expenses.map(e => {
+         const amt = e.amount || 0;
+         totExp += amt;
+         return [
+            e.date || '-',
+            e.category || '-',
+            fmtCur(amt),
+            e.description || '-'
+         ];
+      });
+      
+      // Sort by date desc
+      reportData.sort((a,b)=> new Date(b[0]||0) - new Date(a[0]||0));
+      
+      updateKPIs(
+         "Total Expenses", fmtCur(totExp),
+         "Entries", expenses.length,
+         "Avg Expense", expenses.length>0 ? fmtCur(totExp/expenses.length) : 'Rs. 0',
+         "Projected Run Rate", "-" // To implement
+      );
+      renderTable();
+      renderChart("Expenses Breakdown", reportData, 0, 2); // Data1: Amounts
+    }
+
+    function updateKPIs(l1,v1,l2,v2,l3,v3,l4,v4){
+      document.getElementById('kpi-lbl-1').textContent=l1; document.getElementById('kpi-val-1').innerHTML=v1;
+      document.getElementById('kpi-lbl-2').textContent=l2; document.getElementById('kpi-val-2').innerHTML=v2;
+      document.getElementById('kpi-lbl-3').textContent=l3; document.getElementById('kpi-val-3').innerHTML=v3;
+      document.getElementById('kpi-lbl-4').textContent=l4; document.getElementById('kpi-val-4').innerHTML=v4;
+    }
+
+    function renderTable() {
+      const hd = document.getElementById('table-head');
+      const bd = document.getElementById('table-body');
+      
+      hd.innerHTML = `<tr>${activeColumns.map((c,i) => `<th class="${i>2?'text-right':''}">${c}</th>`).join('')}</tr>`;
+      
+      if(reportData.length === 0){
+        bd.innerHTML = `<tr><td colspan="${activeColumns.length}" class="emp-state">No data matches your filters</td></tr>`;
+        return;
+      }
+      
+      bd.innerHTML = reportData.map(row => {
+         return `<tr>${row.map((val, i) => `<td class="${i>2?'text-right':''}">${val}</td>`).join('')}</tr>`;
+      }).join('');
+    }
+    
+    function renderChart(title, dataRows, labelIdx, val1Idx, val2Idx=null){
+       if(chartInstance) chartInstance.destroy();
+       
+       const limitRows = dataRows.slice(0,10); // Show max 10 in chart to prevent clutter
+       const labels = limitRows.map(r => r[labelIdx]);
+       
+       // Helper to clean formatted currency back to number
+       const cleanNum = (str) => {
+         if(typeof str === 'number') return str;
+         let div=document.createElement('div'); div.innerHTML=str;
+         return parseFloat((div.innerText||"").replace(/[^\d.-]/g, ''))||0;
+       };
+       
+       const d1 = limitRows.map(r => cleanNum(r[val1Idx]));
+       const datasets = [{
+          label: activeColumns[val1Idx],
+          data: d1,
+          backgroundColor: 'rgba(0, 201, 177, 0.6)',
+          borderColor: '#00C9B1',
+          borderWidth: 1
+       }];
+       
+       if(val2Idx !== null){
+          const d2 = limitRows.map(r => cleanNum(r[val2Idx]));
+          datasets.push({
+             label: activeColumns[val2Idx],
+             data: d2,
+             backgroundColor: 'rgba(52, 211, 153, 0.6)',
+             borderColor: '#34D399',
+             borderWidth: 1
+          });
+       }
+
+       const ctx = document.getElementById('reportChart').getContext('2d');
+       Chart.defaults.color = 'rgba(232, 240, 247, 0.6)';
+       chartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: { labels, datasets },
+          options: {
+             responsive: true,
+             maintainAspectRatio: false,
+             plugins: {
+               legend: { position: 'top' }
+             },
+             scales: {
+               y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+               x: { grid: { display: false } }
+             }
+          }
+       });
+    }
+
+    function toggleGraph(){
+       const tWrap = document.getElementById('table-wrap-el');
+       const cWrap = document.getElementById('chart-wrap-el');
+       const btn = document.getElementById('btn-graph');
+       
+       isGraphView = !isGraphView;
+       if(isGraphView){
+          tWrap.style.display = 'none';
+          cWrap.style.display = 'flex';
+          btn.textContent = 'Table View 📄';
+       } else {
+          tWrap.style.display = 'block';
+          cWrap.style.display = 'none';
+          btn.textContent = 'Graph View 📊';
+       }
+    }
+
+    function exportCSV(){
+      if(!reportData.length) return toast('No data to export', 'warning');
+      
+      let csv = activeColumns.map(c=>`"${c}"`).join(',') + '\n';
+      reportData.forEach(row => {
+         // strip HTML tags for export
+         const cleanRow = row.map(val => {
+           let text = document.createElement('div');
+           text.innerHTML = val;
+           let str = text.textContent || text.innerText || "";
+           return `"${str.replace(/"/g, '""')}"`;
+         });
+         csv += cleanRow.join(',') + '\n';
+      });
+      
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `Report_${document.getElementById('r-type').value}_${new Date().getTime()}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Sidebar & Base logic
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+    function signOut(){firebase.auth().signOut().then(()=>location.href='login.html')}
+    firebase.auth().onAuthStateChanged(async user=>{
+      if(!user) location.href='login.html';
+      else {
+         const snap = await db.collection('users').doc(user.uid).get();
+         if(snap.exists){
+            const d = snap.data();
+            window.shopId = d.shopId;
+            document.getElementById('sb-shop').textContent = d.shopName || 'My Shop';
+            document.getElementById('user-nm').textContent = user.email.split('@')[0];
+            document.getElementById('user-av').textContent = user.email[0].toUpperCase();
+            initPage();
+         } else {
+            location.href='setup.html';
+         }
+      }
+    });
+  </script>
+</body>
+</html>

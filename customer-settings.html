@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Settings — Hisab Rakho Customer</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    /* ── PAGE LAYOUT ── */
+    .page-content{padding:20px;max-width:680px;margin:0 auto;display:flex;flex-direction:column;gap:0;min-height:calc(100vh - 56px)}
+
+    /* ── SECTION TABS ── */
+    .cs-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:20px;scrollbar-width:none}
+    .cs-tabs::-webkit-scrollbar{display:none}
+    .cs-tab{flex-shrink:0;padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border);background:var(--bg-card);color:var(--tx-secondary);transition:all .2s;white-space:nowrap}
+    .cs-tab.active{background:rgba(0,201,177,.12);border-color:rgba(0,201,177,.35);color:#00C9B1}
+    body.light-mode .cs-tab{background:#fff;border-color:rgba(0,0,0,.08);color:rgba(13,30,46,.7)}
+    body.light-mode .cs-tab.active{background:rgba(0,201,177,.1);border-color:rgba(0,201,177,.3);color:#009E8E}
+
+    /* ── SECTION PANELS ── */
+    .cs-section{display:none;flex-direction:column;gap:16px;animation:fadeIn .25s ease}
+    .cs-section.active{display:flex}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+    /* ── SECTION HEADER ── */
+    .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+    .sec-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+    .sec-icon.teal{background:rgba(0,201,177,.12)}
+    .sec-icon.gold{background:rgba(245,166,35,.12)}
+    .sec-icon.red{background:rgba(239,68,68,.1)}
+    .sec-icon.blue{background:rgba(59,130,246,.1)}
+    .sec-icon.green{background:rgba(16,185,129,.1)}
+    .sec-title{font-family:var(--font-display);font-size:18px;font-weight:700}
+    .sec-sub{font-size:12px;color:var(--tx-muted);margin-top:1px}
+
+    /* ── CARD ── */
+    .cs-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+    body.light-mode .cs-card{background:#fff;border-color:rgba(0,0,0,.08)}
+
+    /* ── SETTING ROW ── */
+    .sr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;gap:12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+    .sr:last-child{border-bottom:none}
+    .sr:hover{background:rgba(255,255,255,.03)}
+    body.light-mode .sr:hover{background:rgba(0,0,0,.02)}
+    body.light-mode .sr{border-bottom-color:rgba(0,0,0,.06)}
+    .sr-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+    .sr-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .sr-info{flex:1;min-width:0}
+    .sr-title{font-size:13px;font-weight:600;color:var(--tx-primary)}
+    body.light-mode .sr-title{color:#0D1E2E}
+    .sr-sub{font-size:11px;color:var(--tx-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .sr-right{color:var(--tx-muted);font-size:13px;flex-shrink:0}
+
+    /* ── TOGGLE SWITCH ── */
+    .tgl{position:relative;width:44px;height:24px;flex-shrink:0}
+    .tgl input{opacity:0;width:0;height:0;position:absolute}
+    .tgl-track{position:absolute;inset:0;background:rgba(255,255,255,.1);border-radius:12px;transition:.2s;cursor:pointer}
+    body.light-mode .tgl-track{background:rgba(0,0,0,.15)}
+    .tgl input:checked + .tgl-track{background:#00C9B1}
+    .tgl-track::after{content:'';position:absolute;left:3px;top:3px;width:18px;height:18px;background:#fff;border-radius:50%;transition:.2s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+    .tgl input:checked + .tgl-track::after{left:23px}
+
+    /* ── FORM FIELDS ── */
+    .fg{margin-bottom:14px}
+    .fl{display:block;font-size:11px;font-weight:700;color:var(--tx-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px}
+    .fi{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--tx-primary);font-size:14px;padding:11px 14px;outline:none;font-family:var(--font-sans);transition:border-color .2s,box-shadow .2s}
+    body.light-mode .fi{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:#0D1E2E}
+    .fi:focus{border-color:#00C9B1;box-shadow:0 0 0 3px rgba(0,201,177,.1)}
+    .fi-hint{font-size:11px;color:var(--tx-muted);margin-top:4px}
+
+    /* ── AVATAR ── */
+    .av-wrap{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+    .av-big{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#00C9B1,#009E8E);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#040D12;flex-shrink:0;position:relative;cursor:pointer}
+    .av-big .av-edit{position:absolute;bottom:0;right:0;width:22px;height:22px;background:#00C9B1;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;border:2px solid var(--bg-card)}
+    body.light-mode .av-big .av-edit{border-color:#fff}
+    .av-info{flex:1}
+    .av-name{font-family:var(--font-display);font-size:18px;font-weight:700}
+    body.light-mode .av-name{color:#0D1E2E}
+    .av-email{font-size:12px;color:var(--tx-muted);margin-top:3px}
+
+    /* ── BUTTONS ── */
+    .btn-teal{background:linear-gradient(135deg,#00C9B1,#009E8E);border:none;border-radius:10px;color:#040D12;font-size:13px;font-weight:700;padding:11px 20px;cursor:pointer;font-family:var(--font-sans);transition:opacity .2s,transform .2s;width:100%}
+    .btn-teal:hover{opacity:.9;transform:translateY(-1px)}
+    .btn-teal:active{transform:scale(.98)}
+    .btn-ghost{background:transparent;border:1px solid var(--border);border-radius:10px;color:var(--tx-secondary);font-size:13px;font-weight:600;padding:10px 20px;cursor:pointer;font-family:var(--font-sans);transition:all .2s;width:100%}
+    .btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
+    .btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:10px;color:#F87171;font-size:13px;font-weight:700;padding:10px 20px;cursor:pointer;font-family:var(--font-sans);width:100%}
+    .btn-danger:hover{background:rgba(239,68,68,.18)}
+    body.light-mode .btn-ghost{border-color:rgba(0,0,0,.1);color:rgba(13,30,46,.7)}
+
+    /* ── FORM PADDING ── */
+    .cs-form{padding:18px 16px}
+
+    /* ── ACTIVITY ITEM ── */
+    .act-item{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+    .act-item:last-child{border-bottom:none}
+    body.light-mode .act-item{border-bottom-color:rgba(0,0,0,.06)}
+    .act-dot{width:8px;height:8px;border-radius:50%;background:#00C9B1;margin-top:4px;flex-shrink:0}
+    .act-dot.old{background:rgba(255,255,255,.2)}
+    body.light-mode .act-dot.old{background:rgba(0,0,0,.15)}
+    .act-info{flex:1;min-width:0}
+    .act-device{font-size:13px;font-weight:600}
+    body.light-mode .act-device{color:#0D1E2E}
+    .act-meta{font-size:11px;color:var(--tx-muted);margin-top:2px}
+    .act-dismiss{font-size:11px;color:#F87171;cursor:pointer;padding:2px 6px;border-radius:4px;background:rgba(239,68,68,.08);flex-shrink:0;white-space:nowrap}
+
+    /* ── SHOP LINK CARD ── */
+    .shop-link-item{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border)}
+    .shop-link-item:last-child{border-bottom:none}
+    body.light-mode .shop-link-item{border-bottom-color:rgba(0,0,0,.06)}
+    .sl-av{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,rgba(0,201,177,.2),rgba(0,158,142,.15));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .sl-info{flex:1;min-width:0}
+    .sl-name{font-size:13px;font-weight:700}
+    body.light-mode .sl-name{color:#0D1E2E}
+    .sl-meta{font-size:11px;color:var(--tx-muted);margin-top:2px}
+    .sl-badge{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700}
+    .sl-badge.active{background:rgba(16,185,129,.12);color:#34D399}
+    .sl-badge.pending{background:rgba(245,158,11,.12);color:#F5A623}
+    .sl-remove{font-size:11px;color:#F87171;cursor:pointer;padding:5px 10px;border-radius:6px;background:rgba(239,68,68,.08);flex-shrink:0;border:none;font-family:var(--font-sans);font-weight:600}
+    .sl-remove:hover{background:rgba(239,68,68,.15)}
+
+    /* ── PRIVACY banner ── */
+    .priv-banner{background:rgba(0,201,177,.06);border:1px solid rgba(0,201,177,.18);border-radius:14px;padding:16px;display:flex;gap:14px;align-items:flex-start}
+    .priv-banner-ico{font-size:24px;flex-shrink:0;margin-top:2px}
+    .priv-banner-text h4{font-size:14px;font-weight:700;margin-bottom:4px}
+    body.light-mode .priv-banner-text h4{color:#0D1E2E}
+    .priv-banner-text p{font-size:12px;color:var(--tx-muted);line-height:1.5}
+
+    /* ── DANGER ZONE ── */
+    .danger-card{background:rgba(239,68,68,.04);border:1px solid rgba(239,68,68,.15);border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:12px}
+    .danger-title{font-size:13px;font-weight:700;color:#F87171}
+    .danger-sub{font-size:11px;color:var(--tx-muted);line-height:1.5}
+
+    /* ── EMPTY STATE ── */
+    .cs-empty{text-align:center;padding:40px 20px;color:var(--tx-muted)}
+    .cs-empty .ee{font-size:36px;margin-bottom:10px;opacity:.5}
+    .cs-empty p{font-size:13px}
+
+    /* ── DIVIDER ── */
+    .cs-divider{display:flex;align-items:center;gap:10px;margin:4px 0}
+    .cs-divider::before,.cs-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+    .cs-divider span{font-size:11px;color:var(--tx-muted);white-space:nowrap}
+
+    /* ── HELP ── */
+    .help-item{display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border);cursor:pointer}
+    .help-item:last-child{border-bottom:none}
+    body.light-mode .help-item{border-bottom-color:rgba(0,0,0,.06)}
+    .help-item:hover{background:rgba(255,255,255,.03)}
+    .hi-ico{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
+      .menu-toggle{display:flex}.main-area{margin-left:0}
+      .page-content{padding:12px;gap:0}
+    }
+  </style>
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'owner') location.href='dashboard.html';</script>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <div class="sb-logo-row">
+          <div class="sb-logo-icon">🏠</div>
+          <div class="sb-logo-text">Hisab <em>Rakho</em></div>
+        </div>
+        <div class="sb-shop-chip">
+          <div class="sb-shop-av">👤</div>
+          <div><div class="sb-shop-name">Customer Portal</div><div class="sb-shop-plan" id="sb-status">Active</div></div>
+        </div>
+      </div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="customer-dashboard.html" class="nav-link"><span class="nav-ico">🏠</span> Dashboard</a>
+        <a href="customer-shops.html" class="nav-link"><span class="nav-ico">🏪</span> My Shops</a>
+        <div class="sb-sec-lbl">SETTINGS</div>
+        <a href="customer-settings.html" class="nav-link active"><span class="nav-ico">⚙️</span> Profile &amp; Privacy</a>
+      </nav>
+      <div class="sb-footer">
+        <div class="upgrade-card">
+          <div class="upgrade-title">🔒 Secure Hub</div>
+          <div class="upgrade-sub">Customer Edition</div>
+        </div>
+      </div>
+    </aside>
+    <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+    <!-- MAIN -->
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div class="topbar-title">⚙️ Settings</div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="user-pill">
+            <div class="user-av" id="user-av">U</div>
+            <div class="user-nm" id="user-nm">User</div>
+          </div>
+          <button class="logout-btn" onclick="signOut()">⏻ Logout</button>
+        </div>
+      </div>
+
+      <div class="page-content">
+
+        <!-- AVATAR HEADER -->
+        <div class="av-wrap" style="margin-bottom:8px">
+          <div class="av-big" id="av-big" onclick="document.getElementById('sec-account-btn').click()">
+            <span id="av-letter">U</span>
+            <div class="av-edit">✏️</div>
+          </div>
+          <div class="av-info">
+            <div class="av-name" id="av-name">Loading…</div>
+            <div class="av-email" id="av-email">—</div>
+          </div>
+        </div>
+
+        <!-- TABS -->
+        <div class="cs-tabs">
+          <div class="cs-tab active" data-tab="account" onclick="switchTab(this,'account')">👤 Account</div>
+          <div class="cs-tab" data-tab="security" onclick="switchTab(this,'security')" id="sec-account-btn">🔐 Security</div>
+          <div class="cs-tab" data-tab="privacy" onclick="switchTab(this,'privacy')">🛡️ Privacy</div>
+          <div class="cs-tab" data-tab="shops" onclick="switchTab(this,'shops')">🏪 Shops</div>
+          <div class="cs-tab" data-tab="notifications" onclick="switchTab(this,'notifications')">🔔 Notifications</div>
+          <div class="cs-tab" data-tab="data" onclick="switchTab(this,'data')">💾 Data</div>
+          <div class="cs-tab" data-tab="help" onclick="switchTab(this,'help')">❓ Help</div>
+        </div>
+
+        <!-- ══════════════════════════════
+             SECTION 1: ACCOUNT
+        ══════════════════════════════ -->
+        <div class="cs-section active" id="tab-account">
+          <div class="sec-head">
+            <div class="sec-icon teal">👤</div>
+            <div><div class="sec-title">Account</div><div class="sec-sub">Manage your identity</div></div>
+          </div>
+
+          <div class="cs-card">
+            <div class="cs-form">
+              <div class="fg">
+                <label class="fl">Full Name</label>
+                <input class="fi" id="s-name" type="text" placeholder="Your name">
+              </div>
+              <div class="fg">
+                <label class="fl">Email Address</label>
+                <input class="fi" id="s-email" type="email" placeholder="your@email.com" readonly style="opacity:.7;cursor:not-allowed">
+                <div class="fi-hint">To change email, use the Security tab</div>
+              </div>
+              <div class="fg">
+                <label class="fl">Phone Number</label>
+                <input class="fi" id="s-phone" type="tel" placeholder="+92 3XX XXXXXXX">
+              </div>
+              <button class="btn-teal" onclick="saveProfile()">💾 Save Changes</button>
+            </div>
+          </div>
+
+          <div class="cs-divider"><span>Account Actions</span></div>
+
+          <div class="cs-card">
+            <div class="sr" onclick="switchTab(document.querySelector('[data-tab=security]'),'security')">
+              <div class="sr-left">
+                <div class="sr-ico" style="background:rgba(245,158,11,.1)">🔑</div>
+                <div class="sr-info">
+                  <div class="sr-title">Change Password</div>
+                  <div class="sr-sub">Update your login credentials</div>
+                </div>
+              </div>
+              <div class="sr-right">→</div>
+            </div>
+            <div class="sr" onclick="switchTab(document.querySelector('[data-tab=security]'),'security')">
+              <div class="sr-left">
+                <div class="sr-ico" style="background:rgba(59,130,246,.1)">🕐</div>
+                <div class="sr-info">
+                  <div class="sr-title">Login Activity</div>
+                  <div class="sr-sub">See recent sign-in history</div>
+                </div>
+              </div>
+              <div class="sr-right">→</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════
+             SECTION 2: SECURITY
+        ══════════════════════════════ -->
+        <div class="cs-section" id="tab-security">
+          <div class="sec-head">
+            <div class="sec-icon gold">🔐</div>
+            <div><div class="sec-title">Security</div><div class="sec-sub">Protect your account</div></div>
+          </div>
+
+          <!-- Change Password -->
+          <div class="cs-card">
+            <div class="sr" style="cursor:default">
+              <div class="sr-left">
+                <div class="sr-ico" style="background:rgba(245,166,35,.1)">🔑</div>
+                <div class="sr-info"><div class="sr-title">Change Password</div></div>
+              </div>
+            </div>
+            <div class="cs-form" style="padding-top:0;border-top:1px solid var(--border)">
+              <div style="height:12px"></div>
+              <div class="fg">
+                <label class="fl">Current Password</label>
+                <input class="fi" id="pw-current" type="password" placeholder="••••••••">
+              </div>
+              <div class="fg">
+                <label class="fl">New Password</label>
+                <input class="fi" id="pw-new" type="password" placeholder="Min. 8 characters">
+              </div>
+              <div class="fg" style="margin-bottom:16px">
+                <label class="fl">Confirm New Password</label>
+                <input class="fi" id="pw-confirm" type="password" placeholder="Repeat new password">
+              </div>
+              <button class="btn-teal" onclick="changePassword()">🔒 Update Password</button>
+            </div>
+          </div>
+
+          <!-- Login Activity -->
+          <div class="sec-head" style="margin-top:8px">
+            <div class="sec-icon blue">🕐</div>
+            <div><div class="sec-title" style="font-size:15px">Login Activity</div><div class="sec-sub">Recent sign-ins to your account</div></div>
+          </div>
+          <div class="cs-card" id="login-activity-list">
+            <div class="cs-empty"><div class="ee">🕐</div><p>Loading activity…</p></div>
+          </div>
+
+          <!-- Active Sessions -->
+          <div class="sec-head" style="margin-top:4px">
+            <div class="sec-icon teal">📱</div>
+            <div><div class="sec-title" style="font-size:15px">Active Sessions</div><div class="sec-sub">Devices currently logged in</div></div>
+          </div>
+          <div class="cs-card" id="sessions-list">
+            <div class="cs-empty"><div class="ee">📱</div><p>Loading sessions…</p></div>
+          </div>
+          <button class="btn-danger" onclick="logoutAllSessions()">⚠️ Logout All Other Sessions</button>
+        </div>
+
+        <!-- ══════════════════════════════
+             SECTION 3: PRIVACY
+        ══════════════════════════════ -->
+        <div class="cs-section" id="tab-privacy">
+          <div class="sec-head">
+            <div class="sec-icon teal">🛡️</div>
+            <div><div class="sec-title">Privacy</div><div class="sec-sub">Control what you see</div></div>
+          </div>
+
+          <div class="priv-banner">
+            <div class="priv-banner-ico">🔒</div>
+            <div class="priv-banner-text">
+              <h4>Balance Visibility</h4>
+              <p>Hiding your balance only affects your own view. Shopkeepers always see your full data. Your financial records are never deleted.</p>
+            </div>
+          </div>
+
+          <div class="cs-card">
+            <div class="sr" onclick="toggleHideBalance()">
+              <div class="sr-left">
+                <div class="sr-ico" style="background:rgba(0,201,177,.1)">👁️</div>
+                <div class="sr-info">
+                  <div class="sr-title">Hide Balance on Dashboard</div>
+                  <div class="sr-sub" id="balance-vis-sub">Your total outstanding is visible</div>
+                </div>
+              </div>
+              <label class="tgl" onclick="event.stopPropagation()">
+                <input type="checkbox" id="tgl-hide-balance" onchange="savePrivacy()">
+                <div class="tgl-track"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════
+             SECTION 4: SHOPS
+        ══════════════════════════════ -->
+        <div class="cs-section" id="tab-shops">
+          <div class="sec-head">
+            <div class="sec-icon green">🏪</div>
+            <div><div class="sec-title">My Shops</div><div class="sec-sub">Manage shop connections</div></div>
+          </div>
+          <div class="cs-card" id="shops-list">
+            <div class="cs-empty"><div class="ee">🏪</div><p>Loading shops…</p></div>
+          </div>
+          <div style="font-size:11px;color:var(--tx-muted);line-height:1.5;padding:0 4px">
+            ℹ️ You cannot directly remove a link. Requesting removal notifies the shopkeeper, who must approve it.
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════
+             SECTION 5: NOTIFICATIONS
+        ══════════════════════════════ -->
+        <div class="cs-section" id="tab-notifications">
+          <div class="sec-head">
+            <div class="sec-icon gold">🔔</div>
+            <div><div class="sec-title">Notifications</div><div class="sec-sub">Choose what you hear about</div></div>
+          </div>
+          <div class="cs-card">
+            <div class="sr" onclick="toggleTgl('tgl-notif-payment')">
+              <div class="sr-left">
+                <div class="sr-ico" style="background:rgba(239,68,68,.1)">💸</div>
+                <div class="sr-info">
+                  <div class="sr-title">Payment Reminders</div>
+                  <div class="sr-sub">Alerts when bills are due</div>
+                </div>
+              </div>
+              <label class="tgl" onclick="event.stopPropagation()">
+                <input type="checkbox" id="tgl-notif-payment" checked onchange="saveNotifications()">
+                <div class="tgl-track"></div>
+              </label>
+            </div>
+            <div class="sr" onclick="toggleTgl('tgl-notif-bills')">
+              <div class="sr-left">
+                <div class="sr-ico" style="background:rgba(59,130,246,.1)">🧾</div>
+                <div class="sr-info">
+                  <div class="sr-title">New Bill Alerts</div>
+                  <div class="sr-sub">When a shop adds a new bill</div>
+                </div>
+              </div>
+              <label class="tgl" onclick="event.stopPropagation()">
+                <input type="checkbox" id="tgl-notif-bills" checked onchange="saveNotifications()">
+                <div class="tgl-track"></div>
+              </label>
+            </div>
+            <div class="sr" onclick="toggleTgl('tgl-notif-orders')">
+              <div class="sr-left">
+                <div class="sr-ico" style="background:rgba(16,185,129,.1)">📦</div>
+                <div class="sr-info">
+                  <div class="sr-title">Order Updates</div>
+                  <div class="sr-sub">Status changes on your orders</div>
+                </div>
+              </div>
+              <label class="tgl" onclick="event.stopPropagation()">
+                <input type="checkbox" id="tgl-notif-orders" checked onchange="saveNotifications()">
+                <div class="tgl-track"></div>
+              </label>
+            </div>
+            <div class="sr" onclick="toggleTgl('tgl-notif-promo')">
+              <div class="sr-left">
+                <div class="sr-ico" style="background:rgba(245,166,35,.1)">🎉</div>
+                <div class="sr-info">
+                  <div class="sr-title">Promotions &amp; Offers</div>
+                  <div class="sr-sub">Shop announcements and offers</div>
+                </div>
+              </div>
+              <label class="tgl" onclick="event.stopPropagation()">
+                <input type="checkbox" id="tgl-notif-promo" onchange="saveNotifications()">
+                <div class="tgl-track"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════
+             SECTION 6: DATA & CONTROL
+        ══════════════════════════════ -->
+        <div class="cs-section" id="tab-data">
+          <div class="sec-head">
+            <div class="sec-icon blue">💾</div>
+            <div><div class="sec-title">Data &amp; Control</div><div class="sec-sub">Your data, your choice</div></div>
+          </div>
+
+          <div class="cs-card">
+            <div class="sr" onclick="exportData('json')">
+              <div class="sr-left">
+                <div class="sr-ico" style="background:rgba(59,130,246,.1)">📄</div>
+                <div class="sr-info">
+                  <div class="sr-title">Export as JSON</div>
+                  <div class="sr-sub">Download all your bills &amp; payments</div>
+                </div>
+              </div>
+              <div class="sr-right">⬇</div>
+            </div>
+            <div class="sr" onclick="exportData('csv')">
+              <div class="sr-left">
+                <div class="sr-ico" style="background:rgba(16,185,129,.1)">📊</div>
+                <div class="sr-info">
+                  <div class="sr-title">Export as CSV</div>
+                  <div class="sr-sub">Open in Excel or Google Sheets</div>
+                </div>
+              </div>
+              <div class="sr-right">⬇</div>
+            </div>
+          </div>
+
+          <div class="cs-divider"><span>Danger Zone</span></div>
+
+          <div class="danger-card">
+            <div class="danger-title">⚠️ Deactivate Account</div>
+            <div class="danger-sub">Your account will be disabled. Financial records in shop systems will remain intact. You can contact a shopkeeper to remove your data.</div>
+            <button class="btn-danger" onclick="deactivateAccount()">Deactivate My Account</button>
+          </div>
+        </div>
+
+        <!-- ══════════════════════════════
+             SECTION 7: HELP
+        ══════════════════════════════ -->
+        <div class="cs-section" id="tab-help">
+          <div class="sec-head">
+            <div class="sec-icon teal">❓</div>
+            <div><div class="sec-title">Help &amp; Support</div><div class="sec-sub">Get answers fast</div></div>
+          </div>
+          <div class="cs-card">
+            <div class="help-item">
+              <div class="hi-ico" style="background:rgba(0,201,177,.1)">📖</div>
+              <div class="sr-info">
+                <div class="sr-title">How to connect to a shop</div>
+                <div class="sr-sub">Get the 6-digit code from your shopkeeper</div>
+              </div>
+            </div>
+            <div class="help-item">
+              <div class="hi-ico" style="background:rgba(59,130,246,.1)">🔒</div>
+              <div class="sr-info">
+                <div class="sr-title">How to reset your password</div>
+                <div class="sr-sub">Use Forgot Password on the login screen</div>
+              </div>
+            </div>
+            <div class="help-item">
+              <div class="hi-ico" style="background:rgba(245,166,35,.1)">💰</div>
+              <div class="sr-info">
+                <div class="sr-title">Why is my balance wrong?</div>
+                <div class="sr-sub">Contact the shopkeeper — they control your records</div>
+              </div>
+            </div>
+            <div class="help-item" onclick="window.open('mailto:support@hisabrakho.com')">
+              <div class="hi-ico" style="background:rgba(239,68,68,.1)">✉️</div>
+              <div class="sr-info">
+                <div class="sr-title">Contact Support</div>
+                <div class="sr-sub">support@hisabrakho.com</div>
+              </div>
+              <div class="sr-right">→</div>
+            </div>
+          </div>
+
+          <div class="cs-card" style="padding:16px;text-align:center">
+            <div style="font-size:11px;color:var(--tx-muted)">Hisab Rakho Customer Portal</div>
+            <div style="font-size:10px;color:var(--tx-disabled);margin-top:4px">Version 3.0 • Firebase Firestore</div>
+          </div>
+        </div>
+
+      </div><!-- /page-content -->
+    </div><!-- /main-area -->
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+
+  <script>
+    /* ── THEME ── */
+    (function(){
+      if(localStorage.getItem('hr_theme')==='light'){
+        document.body.classList.add('light-mode');
+        document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️');
+      }
+    })();
+
+    let currentUser = null;
+    let settingsDoc = {};
+
+    /* ── TAB SWITCHING ── */
+    function switchTab(el, tabId){
+      document.querySelectorAll('.cs-tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.cs-section').forEach(s=>s.classList.remove('active'));
+      el.classList.add('active');
+      const sec = document.getElementById('tab-'+tabId);
+      if(sec) sec.classList.add('active');
+      // Lazy-load sections
+      if(tabId === 'security')    loadSecurity();
+      if(tabId === 'shops')       loadShops();
+    }
+
+    /* ── SIDEBAR / THEME ── */
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+    function toggleTheme(){
+      document.body.classList.toggle('light-mode');
+      const isLight = document.body.classList.contains('light-mode');
+      localStorage.setItem('hr_theme', isLight?'light':'dark');
+      document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent=isLight?'☀️':'🌙');
+    }
+    function signOut(){ firebase.auth().signOut().then(()=>location.href='login.html'); }
+    function toggleTgl(id){ document.getElementById(id).click(); }
+    function toggleHideBalance(){
+      const chk = document.getElementById('tgl-hide-balance');
+      chk.checked = !chk.checked;
+      savePrivacy();
+    }
+
+    /* ── TOAST ── */
+    function toast(msg, type='success'){
+      const c=document.getElementById('toast-container');
+      const d=document.createElement('div');
+      d.className='toast '+(type==='error'?'toast-err':type==='info'?'toast-info':'toast-ok');
+      d.textContent=msg; c.appendChild(d);
+      setTimeout(()=>{d.classList.add('toast-hide');setTimeout(()=>d.remove(),400)},3200);
+    }
+
+    /* ══════════════════════════════
+       LOAD ALL ON AUTH
+    ══════════════════════════════ */
+    firebase.auth().onAuthStateChanged(async user => {
+      if(!user){ location.href='login.html'; return; }
+      currentUser = user;
+
+      // Populate header
+      const local = JSON.parse(localStorage.getItem('hr_user')||'{}');
+      const displayName = local.name || user.displayName || user.email.split('@')[0];
+      document.getElementById('av-letter').textContent = displayName[0].toUpperCase();
+      document.getElementById('av-big').style.background = `linear-gradient(135deg,#00C9B1,#009E8E)`;
+      document.getElementById('av-name').textContent = displayName;
+      document.getElementById('av-email').textContent = user.email;
+      document.getElementById('user-nm').textContent = displayName;
+      document.getElementById('user-av').textContent = displayName[0].toUpperCase();
+
+      // Prefill Account form
+      document.getElementById('s-name').value  = displayName;
+      document.getElementById('s-email').value = user.email;
+      document.getElementById('s-phone').value = local.phone || '';
+
+      // Load settings doc
+      await loadCustomerSettings();
+    });
+
+    /* ── CUSTOMER SETTINGS DOC ── */
+    async function loadCustomerSettings(){
+      try {
+        const ref = db.collection('customer_settings').doc(currentUser.uid);
+        const snap = await ref.get();
+        if(snap.exists){
+          settingsDoc = snap.data();
+        } else {
+          // Create default
+          settingsDoc = {
+            hide_balance: false,
+            notifications_payment: true,
+            notifications_bills: true,
+            notifications_orders: true,
+            notifications_promotions: false,
+            created_at: firebase.firestore.FieldValue.serverTimestamp()
+          };
+          await ref.set(settingsDoc);
+        }
+        applySettings();
+      } catch(e){ console.warn('Settings load:', e); }
+    }
+
+    function applySettings(){
+      // Privacy
+      document.getElementById('tgl-hide-balance').checked = !!settingsDoc.hide_balance;
+      updateBalanceSub();
+      // Notifications
+      document.getElementById('tgl-notif-payment').checked = settingsDoc.notifications_payment !== false;
+      document.getElementById('tgl-notif-bills').checked   = settingsDoc.notifications_bills   !== false;
+      document.getElementById('tgl-notif-orders').checked  = settingsDoc.notifications_orders  !== false;
+      document.getElementById('tgl-notif-promo').checked   = !!settingsDoc.notifications_promotions;
+    }
+
+    function updateBalanceSub(){
+      const hidden = document.getElementById('tgl-hide-balance').checked;
+      document.getElementById('balance-vis-sub').textContent = hidden
+        ? 'Balance shown as "Hidden" on your dashboard'
+        : 'Your total outstanding is visible to you';
+    }
+
+    /* ════════════════════════════════
+       ACCOUNT — SAVE PROFILE
+    ════════════════════════════════ */
+    async function saveProfile(){
+      const name  = document.getElementById('s-name').value.trim();
+      const phone = document.getElementById('s-phone').value.trim();
+      if(!name){ toast('Name cannot be empty','error'); return; }
+      try {
+        await db.collection('users').doc(currentUser.uid).update({
+          name, phone, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await currentUser.updateProfile({ displayName: name });
+        const local = JSON.parse(localStorage.getItem('hr_user')||'{}');
+        local.name = name; local.phone = phone;
+        localStorage.setItem('hr_user', JSON.stringify(local));
+        // Refresh header
+        document.getElementById('av-letter').textContent = name[0].toUpperCase();
+        document.getElementById('av-name').textContent   = name;
+        document.getElementById('user-nm').textContent   = name;
+        document.getElementById('user-av').textContent   = name[0].toUpperCase();
+        toast('✅ Profile saved!');
+      } catch(e){ toast(e.message,'error'); }
+    }
+
+    /* ════════════════════════════════
+       SECURITY — CHANGE PASSWORD
+    ════════════════════════════════ */
+    async function changePassword(){
+      const cur  = document.getElementById('pw-current').value;
+      const nw   = document.getElementById('pw-new').value;
+      const conf = document.getElementById('pw-confirm').value;
+      if(!cur||!nw||!conf){ toast('All password fields required','error'); return; }
+      if(nw.length < 8){ toast('New password must be 8+ characters','error'); return; }
+      if(nw !== conf){ toast('Passwords do not match','error'); return; }
+      try {
+        // Re-authenticate first
+        const cred = firebase.auth.EmailAuthProvider.credential(currentUser.email, cur);
+        await currentUser.reauthenticateWithCredential(cred);
+        await currentUser.updatePassword(nw);
+        // Invalidate all sessions in Firestore
+        await db.collection('user_sessions').where('userId','==',currentUser.uid).get()
+          .then(s => { s.forEach(d=>d.ref.delete()); });
+        document.getElementById('pw-current').value='';
+        document.getElementById('pw-new').value='';
+        document.getElementById('pw-confirm').value='';
+        toast('🔒 Password changed! Other sessions logged out.');
+      } catch(e){
+        if(e.code==='auth/wrong-password') toast('Current password is incorrect','error');
+        else toast(e.message,'error');
+      }
+    }
+
+    /* ════════════════════════════════
+       SECURITY — LOGIN ACTIVITY
+    ════════════════════════════════ */
+    async function loadSecurity(){
+      await Promise.all([ loadLoginActivity(), loadSessions() ]);
+    }
+
+    async function loadLoginActivity(){
+      const el = document.getElementById('login-activity-list');
+      try {
+        const snap = await db.collection('login_activity')
+          .where('userId','==',currentUser.uid)
+          .orderBy('login_time','desc').limit(10).get();
+
+        if(snap.empty){
+          el.innerHTML = `<div class="cs-empty"><div class="ee">🕐</div><p>No login history yet</p></div>`;
+          return;
+        }
+        el.innerHTML = snap.docs.map(d => {
+          const a = d.data();
+          const t = a.login_time?.toDate ? a.login_time.toDate() : new Date();
+          const ago = timeAgo(t);
+          const device = a.device_info || 'Unknown device';
+          const ip = a.ip_address || '—';
+          const isRecent = (Date.now() - t.getTime()) < 86400000;
+          return `
+            <div class="act-item">
+              <div class="act-dot ${isRecent?'':'old'}"></div>
+              <div class="act-info">
+                <div class="act-device">${device}</div>
+                <div class="act-meta">${ago} · IP: ${ip}</div>
+              </div>
+            </div>`;
+        }).join('');
+      } catch(e){
+        el.innerHTML = `<div class="cs-empty"><div class="ee">⚠️</div><p>Could not load activity</p></div>`;
+      }
+    }
+
+    /* ════════════════════════════════
+       SECURITY — SESSIONS
+    ════════════════════════════════ */
+    async function loadSessions(){
+      const el = document.getElementById('sessions-list');
+      try {
+        const snap = await db.collection('user_sessions')
+          .where('userId','==',currentUser.uid)
+          .orderBy('last_active_at','desc').get();
+
+        if(snap.empty){
+          el.innerHTML = `<div class="cs-empty"><div class="ee">📱</div><p>No active sessions found</p></div>`;
+          return;
+        }
+        const currentSessionId = localStorage.getItem('hr_session_id') || '';
+        el.innerHTML = snap.docs.map(d => {
+          const s = d.data();
+          const t = s.last_active_at?.toDate ? s.last_active_at.toDate() : new Date();
+          const isCurrent = d.id === currentSessionId;
+          return `
+            <div class="act-item">
+              <div class="act-dot" style="${isCurrent?'background:#00C9B1':'background:rgba(255,255,255,.2)'}"></div>
+              <div class="act-info">
+                <div class="act-device">${s.device_info || 'Unknown device'} ${isCurrent?'<span style="background:rgba(0,201,177,.15);color:#00C9B1;font-size:10px;padding:1px 6px;border-radius:4px;margin-left:4px">This device</span>':''}</div>
+                <div class="act-meta">Last active: ${timeAgo(t)}</div>
+              </div>
+              ${!isCurrent ? `<span class="act-dismiss" onclick="logoutSession('${d.id}')">Logout</span>` : ''}
+            </div>`;
+        }).join('');
+      } catch(e){
+        el.innerHTML = `<div class="cs-empty"><div class="ee">⚠️</div><p>Could not load sessions</p></div>`;
+      }
+    }
+
+    async function logoutSession(sessionId){
+      try {
+        await db.collection('user_sessions').doc(sessionId).delete();
+        toast('Session removed');
+        loadSessions();
+      } catch(e){ toast(e.message,'error'); }
+    }
+
+    async function logoutAllSessions(){
+      if(!confirm('Logout all other devices?')) return;
+      try {
+        const currentSessionId = localStorage.getItem('hr_session_id') || '';
+        const snap = await db.collection('user_sessions').where('userId','==',currentUser.uid).get();
+        const batch = db.batch();
+        snap.docs.forEach(d => { if(d.id !== currentSessionId) batch.delete(d.ref); });
+        await batch.commit();
+        toast('✅ All other sessions logged out');
+        loadSessions();
+      } catch(e){ toast(e.message,'error'); }
+    }
+
+    /* ════════════════════════════════
+       PRIVACY
+    ════════════════════════════════ */
+    async function savePrivacy(){
+      const hide = document.getElementById('tgl-hide-balance').checked;
+      updateBalanceSub();
+      try {
+        await db.collection('customer_settings').doc(currentUser.uid).set(
+          { hide_balance: hide, updated_at: firebase.firestore.FieldValue.serverTimestamp() },
+          { merge: true }
+        );
+        // Update local cache
+        settingsDoc.hide_balance = hide;
+        localStorage.setItem('hr_hide_balance', hide ? '1' : '0');
+        toast(hide ? '🙈 Balance hidden on your dashboard' : '👁️ Balance now visible');
+      } catch(e){ toast(e.message,'error'); }
+    }
+
+    /* ════════════════════════════════
+       NOTIFICATIONS
+    ════════════════════════════════ */
+    async function saveNotifications(){
+      const data = {
+        notifications_payment:    document.getElementById('tgl-notif-payment').checked,
+        notifications_bills:      document.getElementById('tgl-notif-bills').checked,
+        notifications_orders:     document.getElementById('tgl-notif-orders').checked,
+        notifications_promotions: document.getElementById('tgl-notif-promo').checked,
+        updated_at: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      try {
+        await db.collection('customer_settings').doc(currentUser.uid).set(data, { merge: true });
+        toast('🔔 Notification preferences saved');
+      } catch(e){ toast(e.message,'error'); }
+    }
+
+    /* ════════════════════════════════
+       SHOPS
+    ════════════════════════════════ */
+    async function loadShops(){
+      const el = document.getElementById('shops-list');
+      try {
+        const snap = await db.collection('customer_shop_links')
+          .where('customerId','==',currentUser.uid).get();
+        if(snap.empty){
+          el.innerHTML = `<div class="cs-empty"><div class="ee">🏪</div><p>No shops connected yet.<br><a href="customer-dashboard.html" style="color:#00C9B1;font-weight:700">Connect to a shop →</a></p></div>`;
+          return;
+        }
+        el.innerHTML = snap.docs.map(d => {
+          const lnk = d.data();
+          const status = lnk.status || 'unknown';
+          const badgeCls = status==='active' ? 'active' : 'pending';
+          const badgeTxt = status==='active' ? '✓ Active' : '⏳ Pending';
+          const linkedDate = lnk.linkedAt?.toDate ? lnk.linkedAt.toDate().toLocaleDateString() : (lnk.requestedAt?.toDate ? lnk.requestedAt.toDate().toLocaleDateString() : '—');
+          return `
+            <div class="shop-link-item">
+              <div class="sl-av">🏪</div>
+              <div class="sl-info">
+                <div class="sl-name">${lnk.shopName || 'Unknown Shop'}</div>
+                <div class="sl-meta"><span class="sl-badge ${badgeCls}">${badgeTxt}</span> · Since ${linkedDate}</div>
+              </div>
+              ${status==='active' ? `<button class="sl-remove" onclick="requestRemoval('${d.id}','${lnk.shopName||'shop'}')">Remove</button>` : `<span style="font-size:11px;color:var(--tx-muted)">Pending</span>`}
+            </div>`;
+        }).join('');
+      } catch(e){
+        el.innerHTML = `<div class="cs-empty"><div class="ee">⚠️</div><p>Could not load shops</p></div>`;
+      }
+    }
+
+    async function requestRemoval(linkId, shopName){
+      if(!confirm(`Request removal from ${shopName}?\n\nThe shopkeeper must approve this.`)) return;
+      try {
+        await db.collection('customer_delete_requests').add({
+          customerId:   currentUser.uid,
+          customerEmail:currentUser.email,
+          linkId:       linkId,
+          shopName:     shopName,
+          status:       'pending',
+          requestedAt:  firebase.firestore.FieldValue.serverTimestamp()
+        });
+        toast('📨 Removal requested. Shopkeeper will review it.');
+        loadShops();
+      } catch(e){ toast(e.message,'error'); }
+    }
+
+    /* ════════════════════════════════
+       DATA — EXPORT
+    ════════════════════════════════ */
+    async function exportData(format){
+      try {
+        toast('⏳ Preparing export…','info');
+        const snap = await db.collection('customer_shop_links')
+          .where('customerId','==',currentUser.uid)
+          .where('status','==','active').get();
+
+        let allBills = [];
+        for(const d of snap.docs){
+          const lnk = d.data();
+          // Try to get bills from flat bills collection or shop sub-collection
+          try {
+            const bSnap = await db.collection('bills')
+              .where('shopId','==',lnk.shopId).limit(50).get();
+            bSnap.forEach(b => allBills.push({ shop: lnk.shopName, ...b.data() }));
+          } catch(_){}
+        }
+
+        const now = new Date().toISOString().slice(0,10);
+        if(format === 'json'){
+          const blob = new Blob([JSON.stringify(allBills, null, 2)], {type:'application/json'});
+          downloadBlob(blob, `hisab-rakho-export-${now}.json`);
+        } else {
+          // CSV
+          const keys = ['shop','total','cashReceived','paymentMethod','createdAt'];
+          const rows = [keys.join(','),
+            ...allBills.map(b => keys.map(k => {
+              let v = b[k];
+              if(v && v.toDate) v = v.toDate().toISOString();
+              return JSON.stringify(v ?? '');
+            }).join(','))
+          ];
+          const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+          downloadBlob(blob, `hisab-rakho-export-${now}.csv`);
+        }
+        toast('✅ Export downloaded!');
+      } catch(e){ toast(e.message,'error'); }
+    }
+
+    function downloadBlob(blob, name){
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = name; a.click();
+      setTimeout(()=>URL.revokeObjectURL(url), 2000);
+    }
+
+    /* ════════════════════════════════
+       DATA — DEACTIVATE
+    ════════════════════════════════ */
+    async function deactivateAccount(){
+      const ok = confirm(
+        'Deactivate your account?\n\n' +
+        '• You will be logged out\n' +
+        '• Your data may still exist in shop records\n' +
+        '• Contact a shopkeeper to remove your records\n\n' +
+        'Confirm deactivation?'
+      );
+      if(!ok) return;
+      try {
+        await db.collection('users').doc(currentUser.uid).update({
+          deactivated: true,
+          deactivatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        await firebase.auth().signOut();
+        location.href = 'login.html';
+      } catch(e){ toast(e.message,'error'); }
+    }
+
+    /* ════════════════════════════════
+       HELPERS
+    ════════════════════════════════ */
+    function timeAgo(date){
+      const diff = (Date.now() - date.getTime()) / 1000;
+      if(diff < 60) return 'Just now';
+      if(diff < 3600) return Math.floor(diff/60) + 'm ago';
+      if(diff < 86400) return Math.floor(diff/3600) + 'h ago';
+      return Math.floor(diff/86400) + 'd ago';
+    }
+  </script>
+</body>
+</html>

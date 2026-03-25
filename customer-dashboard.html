@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Customer Dashboard — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    .page-content{padding:20px;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:20px;min-height:calc(100vh - 56px)}
+    
+    .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+    @media(max-width:850px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:480px){.stats-grid{grid-template-columns:1fr}}
+    
+    .stat-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden}
+    body.light-mode .stat-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    .stat-card::after{content:'';position:absolute;top:0;right:0;width:100px;height:100px;background:radial-gradient(circle,rgba(255,255,255,.05) 0%,transparent 70%);border-radius:50%;transform:translate(30%,-30%)}
+    .st-label{font-size:12px;font-weight:600;color:var(--tx-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px}
+    .st-value{font-family:var(--font-display);font-size:28px;font-weight:800;color:var(--tx-primary)}
+    body.light-mode .st-value{color:#0D1E2E}
+    .st-sub{font-size:11px;color:rgba(232,240,247,.4);margin-top:4px}
+    
+    .recent-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
+    .rh-title{font-family:var(--font-display);font-size:18px;font-weight:700}
+    .rh-link{font-size:12px;color:#00C9B1;text-decoration:none;font-weight:600}
+    
+    .bill-list{display:flex;flex-direction:column;gap:12px}
+    .bill-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;justify-content:space-between;align-items:center;transition:transform .2s,border-color .2s}
+    body.light-mode .bill-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    .bill-card:hover{transform:translateY(-2px);border-color:rgba(0,201,177,.3)}
+    
+    .bc-left{display:flex;flex-direction:column;gap:4px}
+    .bc-shop{font-weight:700;font-size:14px}
+    .bc-date{font-size:11px;color:var(--tx-muted)}
+    
+    .bc-right{text-align:right;display:flex;flex-direction:column;gap:4px}
+    .bc-amt{font-family:var(--font-display);font-size:16px;font-weight:800;color:#F87171}
+    .bc-status{font-size:10px;padding:2px 8px;border-radius:12px;font-weight:700;display:inline-block}
+    .st-unpaid{background:rgba(248,113,113,.1);color:#F87171}
+    .st-paid{background:rgba(52,211,153,.1);color:#34D399}
+    
+    .empty-state{text-align:center;padding:60px 20px;background:var(--bg-card);border:1px dashed var(--border);border-radius:16px}
+    body.light-mode .empty-state{background:#fff;border-color:rgba(0,0,0,.1)}
+    .es-icon{font-size:40px;margin-bottom:16px;opacity:.5}
+    .es-text{color:var(--tx-muted);margin-bottom:20px;font-size:14px}
+    .btn-main{padding:10px 20px;background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border:none;border-radius:8px;font-weight:700;cursor:pointer}
+    
+    /* MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(4,13,18,.8);backdrop-filter:blur(4px);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
+    .modal-overlay.open{display:flex}
+    .modal-box{background:var(--bg-card);width:100%;max-width:400px;border-radius:16px;border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,.4);transform:scale(.95);opacity:0;transition:all .2s;position:relative}
+    body.light-mode .modal-box{background:#fff;border-color:rgba(0,0,0,.08)}
+    .modal-overlay.open .modal-box{transform:scale(1);opacity:1}
+    .m-head{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center}
+    .m-title{font-family:var(--font-display);font-size:16px;font-weight:700}
+    .m-close{background:none;border:none;color:var(--tx-muted);font-size:24px;cursor:pointer;line-height:1}
+    .m-body{padding:20px}
+    
+    .fg{margin-bottom:16px}
+    .fl{display:block;font-size:11px;font-weight:700;color:var(--tx-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+    .fi{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#E8F0F7;font-size:14px;padding:11px 14px;outline:none}
+    body.light-mode .fi{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:#0D1E2E}
+    .fi:focus{border-color:#00C9B1;box-shadow:0 0 0 3px rgba(0,201,177,.1)}
+    
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
+      .menu-toggle{display:flex}.main-area{margin-left:0}
+    }
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'owner') location.href='dashboard.html';</script>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <div style="display:flex;min-height:100vh">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div>
+        <div class="sb-shop-chip"><div class="sb-shop-av">👤</div><div><div class="sb-shop-name">Customer Portal</div><div class="sb-shop-plan shoppl">Active</div></div></div>
+      </div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="customer-dashboard.html" class="nav-link active"><span class="nav-ico">🏠</span>Dashboard</a>
+        <a href="customer-shops.html" class="nav-link"><span class="nav-ico">🏪</span>My Shops</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="#" class="nav-link"><span class="nav-ico">⚙️</span>Profile & Privacy</a>
+      </nav>
+      <div class="sb-footer">
+        <div class="upgrade-card"><div class="upgrade-title">Secure Hub</div><div class="upgrade-sub">Customer Edition</div></div>
+      </div>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main-area">
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div class="topbar-title">🏠 Customer Dashboard</div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="user-pill"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div>
+          <button class="logout-btn" onclick="signOut()">⏻ Logout</button>
+        </div>
+      </div>
+
+      <!-- CONTENT -->
+      <div class="page-content">
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="st-label">Total Outstanding</div>
+            <div class="st-value" id="st-out" style="color:#F87171">Rs. 0</div>
+            <div class="st-sub" id="st-out-sub">Across 0 linked shops</div>
+          </div>
+          <div class="stat-card" style="cursor:pointer" onclick="openLinkModal()">
+            <div class="st-label">Linked Shops</div>
+            <div class="st-value" id="st-shops" style="color:#00C9B1">0</div>
+            <div class="st-sub">Click to link a new shop</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="recent-header">
+            <div class="rh-title">Recent Bills & Dues</div>
+          </div>
+          <div class="bill-list" id="recent-bills">
+            <div class="empty-state">
+              <div class="es-icon">🏪</div>
+              <div class="es-text">You are not connected to any shops yet. Connect using a Shop ID to view your records.</div>
+              <button class="btn-main" onclick="openLinkModal()">🔗 Connect to Shop</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Connect Shop Modal -->
+  <div class="modal-overlay" id="link-modal">
+    <div class="modal-box">
+      <div class="m-head">
+        <div class="m-title">🔗 Connect to a Shop</div>
+        <button class="m-close" onclick="closeLinkModal()">×</button>
+      </div>
+      <div class="m-body">
+        <p style="font-size:13px;color:var(--tx-muted);line-height:1.6;margin-bottom:16px">
+          Enter the shop's <strong>6-digit Shop Code</strong> <em>or</em> the shopkeeper's <strong>phone number</strong> to link your account.
+        </p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+          <button id="link-tab-code" onclick="setLinkTab('code')" style="padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(0,201,177,.15);border:1px solid #00C9B1;color:#00C9B1">🔢 Shop Code</button>
+          <button id="link-tab-phone" onclick="setLinkTab('phone')" style="padding:9px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--tx-muted)">📱 Phone Number</button>
+        </div>
+        <div class="fg">
+          <label class="fl" id="link-label">6-Digit Shop Code</label>
+          <input type="text" id="shop-id-in" class="fi" placeholder="e.g. 123456" maxlength="15" inputmode="numeric">
+        </div>
+        <div id="link-hint" style="font-size:11px;color:var(--tx-muted);margin-top:-4px;margin-bottom:12px">The 6-digit code is shown on the shopkeeper's dashboard.</div>
+        <button class="btn-main" style="width:100%" id="btn-link" onclick="linkShop()">🔗 Link to Shop</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}})();
+    
+    let currentUser = null;
+    let linkedShops = [];
+    let dashboardBills = [];
+
+    // Modals
+    function openLinkModal(){ document.getElementById('link-modal').classList.add('open'); }
+    function closeLinkModal(){ document.getElementById('link-modal').classList.remove('open'); document.getElementById('shop-id-in').value=''; }
+
+    async function initPage(){
+      try {
+        const linksSnap = await db.collection('customer_shop_links')
+          .where('customerId', '==', currentUser.uid).get();
+        linkedShops = linksSnap.docs.map(d => ({id:d.id, ...d.data()}));
+
+        const active  = linkedShops.filter(s => s.status === 'active');
+        const pending = linkedShops.filter(s => s.status === 'pending_shop_approval');
+        const incoming= linkedShops.filter(s => s.status === 'pending_customer_approval');
+
+        document.getElementById('st-shops').textContent = active.length;
+
+        // Show pending banners
+        renderPendingBanners(pending, incoming);
+
+        if(active.length > 0) loadAggregatedData();
+
+      } catch(e) {
+        toast('Error loading dashboard: ' + e.message, 'error');
+        console.error(e);
+      }
+    }
+
+    function renderPendingBanners(pending, incoming){
+      const listEl = document.getElementById('recent-bills');
+      let html = '';
+
+      // Incoming: shopkeeper invited this customer
+      incoming.forEach(link => {
+        html += `
+          <div style="background:rgba(0,201,177,.08);border:1px solid rgba(0,201,177,.25);border-radius:14px;padding:16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div>
+              <div style="font-weight:700;font-size:13px">📨 ${link.shopName || 'A shop'} wants to link with you</div>
+              <div style="font-size:11px;color:var(--tx-muted);margin-top:3px">Accept to view your bills and dues from this shop</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onclick="respondToLink('${link.id}','active')" style="background:linear-gradient(135deg,#00C9B1,#009E8E);border:none;border-radius:8px;padding:8px 14px;color:#040D12;font-size:12px;font-weight:700;cursor:pointer">✅ Accept</button>
+              <button onclick="respondToLink('${link.id}','denied')" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:8px 14px;color:#F87171;font-size:12px;font-weight:700;cursor:pointer">✕ Deny</button>
+            </div>
+          </div>`;
+      });
+
+      // Sent: customer requested, waiting for shop
+      pending.forEach(link => {
+        html += `
+          <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:14px;padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div>
+              <div style="font-weight:700;font-size:13px">⏳ Pending: ${link.shopName || 'Shop'}</div>
+              <div style="font-size:11px;color:var(--tx-muted);margin-top:3px">Waiting for shopkeeper to approve your link request</div>
+            </div>
+            <button onclick="respondToLink('${link.id}','cancelled')" style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:6px 12px;color:#F87171;font-size:11px;font-weight:700;cursor:pointer">Cancel</button>
+          </div>`;
+      });
+
+      if(html) listEl.innerHTML = html;
+    }
+
+    async function respondToLink(linkId, newStatus){
+      try {
+        if(newStatus === 'cancelled' || newStatus === 'denied'){
+          await db.collection('customer_shop_links').doc(linkId).delete();
+          toast(newStatus === 'denied' ? '🚫 Request denied.' : '❌ Request cancelled.', 'info');
+        } else {
+          await db.collection('customer_shop_links').doc(linkId).update({ status: newStatus });
+          toast('✅ Linked! You can now view your bills.', 'success');
+        }
+        initPage();
+      } catch(e) { toast(e.message, 'error'); }
+    }
+    
+    async function loadAggregatedData() {
+       let totalDue = 0;
+       dashboardBills = [];
+       const listEl = document.getElementById('recent-bills');
+       listEl.innerHTML = `<div style="text-align:center;padding:20px;opacity:.5">Loading your records...</div>`;
+       
+       for(let link of linkedShops){
+          if(link.status !== 'active') continue;
+          
+          try {
+             // Fetch shop info
+             const sdoc = await db.collection('shops').doc(link.shopId).get();
+             const sname = sdoc.exists ? sdoc.data().name : 'Unknown Shop';
+             
+             // Fetch the customer record within that shop
+             if(link.shopCustomerId){
+                const cdoc = await db.collection('shops').doc(link.shopId).collection('customers').doc(link.shopCustomerId).get();
+                if(cdoc.exists){
+                   totalDue += (cdoc.data().balance || 0);
+                }
+                
+                // Fetch recent bills from this shop
+                const bsnap = await db.collection('shops').doc(link.shopId).collection('bills')
+                   .where('customerId', '==', link.shopCustomerId)
+                   .orderBy('createdAt', 'desc')
+                   .limit(5).get();
+                   
+                bsnap.forEach(b => {
+                   dashboardBills.push({...b.data(), shopName: sname, _id: b.id});
+                });
+             }
+          } catch(e) { console.error('Failed to load shop data', e); }
+       }
+       
+       document.getElementById('st-out').textContent = fmtCur(totalDue);
+       document.getElementById('st-out-sub').textContent = `Across ${linkedShops.filter(s=>s.status==='active').length} linked shops`;
+
+       // Privacy: hide balance if the customer toggled hide_balance in settings
+       const hideBalance = localStorage.getItem('hr_hide_balance') === '1';
+       if(hideBalance){
+         document.getElementById('st-out').innerHTML = '<span style="filter:blur(6px);user-select:none" title="Balance hidden">Rs. ****</span>';
+         document.getElementById('st-out-sub').textContent = '🙈 Hidden — change in Settings';
+       }
+
+       
+       dashboardBills.sort((a,b) => {
+          const tA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : Date.now();
+          const tB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : Date.now();
+          return tB - tA;
+       });
+       
+       if(dashboardBills.length===0){
+          listEl.innerHTML = `<div class="empty-state"><div class="es-icon">🧾</div><div class="es-text">No recent bills found from your linked shops.</div></div>`;
+          return;
+       }
+       
+       listEl.innerHTML = dashboardBills.map(b => {
+          const isPaid = (b.cashReceived >= b.total || b.paymentMethod==='cash');
+          const statClass = isPaid ? 'st-paid' : 'st-unpaid';
+          const statText = isPaid ? 'PAID' : 'DUE';
+          const amtText = isPaid ? fmtCur(b.total) : fmtCur(b.total - (b.cashReceived||0));
+          const dt = b.createdAt?.toDate ? formatDateTime(b.createdAt.toDate()) : '-';
+          
+          return `
+          <div class="bill-card">
+            <div class="bc-left">
+              <div class="bc-shop">🏪 ${b.shopName}</div>
+              <div class="bc-date">Bill #${b._id.substring(0,6).toUpperCase()} • ${dt}</div>
+            </div>
+            <div class="bc-right">
+              <div class="bc-amt">${amtText}</div>
+              <div><span class="bc-status ${statClass}">${statText}</span></div>
+            </div>
+          </div>
+          `;
+       }).join('');
+    }
+
+    let linkMode = 'code'; // 'code' or 'phone'
+
+    function setLinkTab(mode){
+      linkMode = mode;
+      const tabCode  = document.getElementById('link-tab-code');
+      const tabPhone = document.getElementById('link-tab-phone');
+      const input    = document.getElementById('shop-id-in');
+      const label    = document.getElementById('link-label');
+      const hint     = document.getElementById('link-hint');
+
+      const activeStyle  = 'background:rgba(0,201,177,.15);border:1px solid #00C9B1;color:#00C9B1';
+      const inactiveStyle= 'background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--tx-muted)';
+
+      if(mode === 'code'){
+        tabCode.style.cssText  = activeStyle;
+        tabPhone.style.cssText = inactiveStyle;
+        label.textContent = '6-Digit Shop Code';
+        input.placeholder = 'e.g. 123456';
+        input.inputMode   = 'numeric';
+        hint.textContent  = 'The 6-digit code is shown on the shopkeeper\'s dashboard.';
+      } else {
+        tabCode.style.cssText  = inactiveStyle;
+        tabPhone.style.cssText = activeStyle;
+        label.textContent = 'Shopkeeper Phone Number';
+        input.placeholder = 'e.g. 03001234567';
+        input.inputMode   = 'tel';
+        hint.textContent  = 'Enter the phone number the shopkeeper used to register.';
+      }
+      input.value = '';
+      input.focus();
+    }
+
+    async function linkShop(){
+       const rawVal = document.getElementById('shop-id-in').value.trim();
+       if(!rawVal) return toast('Please enter a '+(linkMode==='code'?'shop code':'phone number'),'error');
+
+       const btn = document.getElementById('btn-link');
+       btn.disabled = true; btn.textContent = 'Searching...';
+
+       try {
+          let shopId = null;
+          let shopData = null;
+
+          if(linkMode === 'code'){
+            // Stage 1: Query by 6-digit shopCode field
+            const codeSnap = await db.collection('shops').where('shopCode','==',rawVal).limit(1).get();
+            if(!codeSnap.empty){
+              shopId   = codeSnap.docs[0].id;
+              shopData = codeSnap.docs[0].data();
+            } else {
+              // Stage 2: Try as raw Firestore shopId (for legacy shops without shopCode)
+              const directDoc = await db.collection('shops').doc(rawVal).get();
+              if(directDoc.exists){
+                shopId   = directDoc.id;
+                shopData = directDoc.data();
+                toast('ℹ️ Legacy shop ID used. Ask the shopkeeper to open Settings to get a 6-digit code.','info');
+              } else {
+                throw new Error('No shop found with code "' + rawVal + '". Open Settings to get your Shop Code and share with customers.');
+              }
+            }
+          } else {
+            // Query by shop phone
+            const phoneSnap = await db.collection('shops').where('phone','==',rawVal).limit(1).get();
+            if(!phoneSnap.empty){
+              shopId   = phoneSnap.docs[0].id;
+              shopData = phoneSnap.docs[0].data();
+            } else {
+              const userSnap = await db.collection('users').where('phone','==',rawVal).where('role','==','owner').limit(1).get();
+              if(userSnap.empty) throw new Error('No shop found with phone "' + rawVal + '".');
+              const owner = userSnap.docs[0].data();
+              shopId = owner.shopId;
+              const sDoc = await db.collection('shops').doc(shopId).get();
+              if(!sDoc.exists) throw new Error('Shop not found.');
+              shopData = sDoc.data();
+            }
+          }
+
+          // Check if already linked (any status)
+          const exist = await db.collection('customer_shop_links')
+            .where('customerId','==',currentUser.uid)
+            .where('shopId','==',shopId).get();
+          if(!exist.empty){
+            const s = exist.docs[0].data().status;
+            if(s === 'active')   throw new Error('You are already linked to ' + (shopData.name||'this shop') + '.');
+            if(s === 'pending_shop_approval') throw new Error('Your request is already pending for ' + (shopData.name||'this shop') + '. Please wait for shopkeeper approval.');
+          }
+
+          // Create link — status pending until shopkeeper approves
+          btn.textContent = 'Sending request...';
+          const myInfo = JSON.parse(localStorage.getItem('hr_user')||'{}');
+          await db.collection('customer_shop_links').add({
+             customerId:     currentUser.uid,
+             customerName:   myInfo.name  || currentUser.displayName || '',
+             customerPhone:  myInfo.phone || '',
+             customerEmail:  currentUser.email || '',
+             shopId:         shopId,
+             shopName:       shopData.name || 'Unknown Shop',
+             shopCode:       shopData.shopCode || '',
+             status:         'pending_shop_approval',
+             requestedAt:    firebase.firestore.FieldValue.serverTimestamp()
+          });
+
+          toast('📨 Request sent to ' + (shopData.name||'shop') + '! Waiting for shopkeeper approval.', 'success');
+          closeLinkModal();
+          initPage();
+
+       } catch(e) {
+          toast(e.message, 'error');
+       }
+       btn.disabled = false; btn.textContent = '🔗 Link to Shop';
+    }
+
+
+
+    // Sidebar & Base logic
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+    function signOut(){firebase.auth().signOut().then(()=>location.href='login.html')}
+    firebase.auth().onAuthStateChanged(async user=>{
+      if(!user) location.href='login.html';
+      else {
+         currentUser = user;
+         // Try finding details in local storage
+         const localU = localStorage.getItem('hr_user');
+         if(localU){
+            const parsed = JSON.parse(localU);
+            
+            currentUser.phone = parsed.phone || '';
+            document.getElementById('user-nm').textContent = parsed.name || user.email.split('@')[0];
+            document.getElementById('user-av').textContent = (parsed.name || user.email)[0].toUpperCase();
+         } else {
+            document.getElementById('user-nm').textContent=user.email.split('@')[0];
+            document.getElementById('user-av').textContent=user.email[0].toUpperCase();
+         }
+         initPage();
+      }
+    });
+  </script>
+</body>
+</html>

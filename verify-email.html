@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Verify Email — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:#040D12;color:#E8F0F7;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow-x:hidden}
+    body.light-mode{background:#F0F4F8;color:#0D1E2E}
+
+    .card{width:100%;max-width:420px;text-align:center;padding:32px 24px;margin:16px}
+    .icon-ring{width:72px;height:72px;border-radius:50%;background:rgba(0,201,177,.1);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;border:2px solid rgba(0,201,177,.2);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,201,177,.15)}50%{box-shadow:0 0 0 15px rgba(0,201,177,0)}}
+
+    .f-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px}
+    .f-subtitle{font-size:13px;color:rgba(232,240,247,.45);line-height:1.6;margin-bottom:6px}
+    body.light-mode .f-subtitle{color:rgba(13,30,46,.5)}
+    .email-display{font-size:14px;font-weight:600;color:#00C9B1;margin-bottom:24px}
+
+    .steps{display:flex;gap:8px;justify-content:center;margin-bottom:24px}
+    .step{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(232,240,247,.4);padding:5px 10px;background:rgba(255,255,255,.04);border-radius:20px;border:1px solid rgba(255,255,255,.06)}
+    .step.active{color:#00C9B1;border-color:rgba(0,201,177,.2);background:rgba(0,201,177,.08)}
+    .step-num{width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+    .step.active .step-num{background:#00C9B1;color:#040D12}
+
+    .btn-main{width:100%;padding:12px;min-height:46px;background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:transform .1s,box-shadow .15s;font-family:'Plus Jakarta Sans',sans-serif;margin-bottom:10px}
+    .btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,201,177,.35)}
+    .btn-main:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+    .btn-sec{width:100%;padding:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#E8F0F7;font-size:13px;font-weight:600;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:background .15s;margin-bottom:8px}
+    body.light-mode .btn-sec{background:#fff;border-color:rgba(0,0,0,.1);color:#0D1E2E}
+    .btn-sec:hover{background:rgba(255,255,255,.08)}
+    .btn-sec:disabled{opacity:.4;cursor:not-allowed}
+
+    .timer{font-size:12px;color:rgba(232,240,247,.35);margin-top:8px}
+    .form-error{display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:8px 12px;font-size:12px;color:#F87171;margin-bottom:10px}
+    .success-msg{display:none;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);border-radius:8px;padding:10px;font-size:12px;color:#34D399;margin-bottom:10px}
+
+    @media(max-width:480px){
+      .card{padding:24px 16px}
+      .f-title{font-size:20px}
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="icon-ring">✉️</div>
+    <div class="f-title">Verify Your Email</div>
+    <div class="f-subtitle">We've sent a verification link to:</div>
+    <div class="email-display" id="user-email">loading...</div>
+
+    <div class="steps">
+      <div class="step active"><div class="step-num">1</div>Check Email</div>
+      <div class="step"><div class="step-num">2</div>Click Link</div>
+      <div class="step"><div class="step-num">3</div>Setup Shop</div>
+    </div>
+
+    <div class="form-error" id="ve-err"></div>
+    <div class="success-msg" id="ve-success"></div>
+
+    <button class="btn-main" id="check-btn" onclick="checkVerification()">I've Verified My Email →</button>
+    <button class="btn-sec" id="resend-btn" onclick="resendEmail()">📧 Resend Verification Email</button>
+    <div class="timer" id="timer-text"></div>
+    
+    <div style="margin-top:16px;font-size:12px;color:rgba(232,240,247,.3)">
+      Wrong email? <a href="signup.html" style="color:#00C9B1;text-decoration:none;font-weight:600">Sign up again</a>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light')document.body.classList.add('light-mode')})();
+
+    let resendCooldown = 0;
+
+    auth.onAuthStateChanged(user => {
+      if (!user) { location.href = 'login.html'; return; }
+      document.getElementById('user-email').textContent = user.email;
+      
+      if (user.emailVerified) {
+        const shopData = localStorage.getItem('hr_shop');
+        if (shopData && JSON.parse(shopData).shopId) {
+          location.href = 'dashboard.html';
+        } else {
+          location.href = 'setup.html';
+        }
+      }
+    });
+
+    async function checkVerification() {
+      const btn = document.getElementById('check-btn');
+      btn.disabled = true; btn.textContent = 'Checking...';
+      document.getElementById('ve-err').style.display = 'none';
+      
+      try {
+        await auth.currentUser.reload();
+        if (auth.currentUser.emailVerified) {
+          document.getElementById('ve-success').textContent = '✅ Email verified! Redirecting...';
+          document.getElementById('ve-success').style.display = 'block';
+          setTimeout(() => location.href = 'setup.html', 1500);
+        } else {
+          document.getElementById('ve-err').textContent = 'Email not yet verified. Please check your inbox and click the verification link.';
+          document.getElementById('ve-err').style.display = 'block';
+          btn.disabled = false; btn.textContent = "I've Verified My Email →";
+        }
+      } catch(e) {
+        document.getElementById('ve-err').textContent = 'Error checking verification: ' + e.message;
+        document.getElementById('ve-err').style.display = 'block';
+        btn.disabled = false; btn.textContent = "I've Verified My Email →";
+      }
+    }
+
+    async function resendEmail() {
+      if (resendCooldown > 0) return;
+      const btn = document.getElementById('resend-btn');
+      btn.disabled = true;
+      
+      try {
+        await auth.currentUser.sendEmailVerification();
+        document.getElementById('ve-success').textContent = '✅ Verification email sent again!';
+        document.getElementById('ve-success').style.display = 'block';
+        
+        // 60 second cooldown
+        resendCooldown = 60;
+        const timer = document.getElementById('timer-text');
+        const interval = setInterval(() => {
+          resendCooldown--;
+          timer.textContent = 'Resend available in ' + resendCooldown + 's';
+          if (resendCooldown <= 0) {
+            clearInterval(interval);
+            timer.textContent = '';
+            btn.disabled = false;
+          }
+        }, 1000);
+      } catch(e) {
+        document.getElementById('ve-err').textContent = 'Failed to resend: ' + e.message;
+        document.getElementById('ve-err').style.display = 'block';
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

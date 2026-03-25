@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <meta name="description" content="Hisab Rakho — Smart shop management for Pakistani businesses">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:#040D12;color:#E8F0F7;display:flex;align-items:center;justify-content:center;min-height:100vh;overflow:hidden}
+    .splash{text-align:center;animation:fadeIn .8s ease}
+    .logo-ring{width:100px;height:100px;border-radius:24px;background:linear-gradient(135deg,#00C9B1,#009E8E);display:flex;align-items:center;justify-content:center;font-size:48px;margin:0 auto 24px;box-shadow:0 0 60px rgba(0,201,177,.3);animation:pulse 2s infinite}
+    .brand{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
+    .brand em{color:#00C9B1;font-style:normal}
+    .tagline{font-size:14px;color:rgba(232,240,247,.5);margin-bottom:40px}
+    .loader{width:40px;height:40px;border:3px solid rgba(0,201,177,.15);border-top-color:#00C9B1;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @keyframes pulse{0%,100%{box-shadow:0 0 30px rgba(0,201,177,.2)}50%{box-shadow:0 0 60px rgba(0,201,177,.4)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  </style>
+</head>
+<body>
+  <div class="splash">
+    <div class="logo-ring">🏪</div>
+    <div class="brand">Hisab <em>Rakho</em></div>
+    <div class="tagline">Smart Shop Management</div>
+    <div class="loader"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW registration failed:', e));
+    }
+
+    // Check auth state and redirect
+    auth.onAuthStateChanged(user => {
+      setTimeout(() => {
+        if (user) {
+          if (!user.emailVerified) {
+            location.href = 'verify-email.html';
+          } else {
+            const shop = localStorage.getItem('hr_shop');
+            if (shop && JSON.parse(shop).shopId) {
+              location.href = 'dashboard.html';
+            } else {
+              // Check Firestore for shop
+              db.collection('users').doc(user.uid).get().then(doc => {
+                if (doc.exists && doc.data().shopId) {
+                  // Load shop data
+                  db.collection('shops').doc(doc.data().shopId).get().then(shopDoc => {
+                    if (shopDoc.exists) {
+                      localStorage.setItem('hr_shop', JSON.stringify({ shopId: shopDoc.id, ...shopDoc.data() }));
+                      localStorage.setItem('hr_user', JSON.stringify(doc.data()));
+                      location.href = 'dashboard.html';
+                    } else {
+                      location.href = 'setup.html';
+                    }
+                  });
+                } else {
+                  location.href = 'setup.html';
+                }
+              }).catch(() => location.href = 'setup.html');
+            }
+          }
+        } else {
+          location.href = 'login.html';
+        }
+      }, 1500);
+    });
+  </script>
+</body>
+</html>

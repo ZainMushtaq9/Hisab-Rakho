@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sync Hub — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    .sync-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .sync-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    .sync-title { font-size: 15px; font-weight: 700; }
+    .sync-badge {
+      font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 20px;
+    }
+    .badge-online { background: rgba(16,185,129,.15); color: #10B981; }
+    .badge-offline { background: rgba(239,68,68,.15); color: #EF4444; }
+    .badge-syncing { background: rgba(59,130,246,.15); color: #3B82F6; }
+    
+    .stat-row {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px;
+    }
+    .stat-box {
+      background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.04);
+      border-radius: 10px; padding: 12px; text-align: center;
+    }
+    .stat-val { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--primary); }
+    .stat-lbl { font-size: 10px; color: var(--tx-muted); margin-top: 2px; }
+    
+    .log-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .log-item:last-child { border-bottom: none; }
+    .log-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--primary); flex-shrink: 0; margin-top: 4px;
+    }
+    .log-dot.fail { background: #EF4444; }
+    .log-dot.queue { background: #F59E0B; }
+    .log-time { font-size: 10px; color: var(--tx-muted); }
+    
+    .sync-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 12px; background: var(--primary);
+      border: none; border-radius: 10px; color: #040D12;
+      font-weight: 800; font-size: 14px; cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .sync-btn:hover { opacity: 0.9; }
+    .sync-btn:disabled { opacity: 0.5; cursor: default; }
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+  <div style="display:flex;min-height:100vh">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand"><div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div>
+        <div class="sb-shop-chip"><div class="sb-shop-av">🛒</div><div><div class="sb-shop-name" id="sb-shop">Shop</div><div class="sb-shop-plan">FREE</div></div></div></div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a>
+        <a href="pos.html" class="nav-link"><span class="nav-ico">💳</span>New Sale</a>
+        <a href="inventory.html" class="nav-link"><span class="nav-ico">📦</span>Inventory</a>
+        <a href="customers.html" class="nav-link"><span class="nav-ico">👥</span>Customers</a>
+        <a href="bills.html" class="nav-link"><span class="nav-ico">🧾</span>Bills</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">SYSTEM</div>
+        <a href="notifications.html" class="nav-link"><span class="nav-ico">🔔</span>Notifications</a>
+        <a href="sync-hub.html" class="nav-link active"><span class="nav-ico">🔄</span>Sync Hub</a>
+        <a href="shop-requests.html" class="nav-link"><span class="nav-ico">📬</span>Client Hub</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="settings.html" class="nav-link"><span class="nav-ico">⚙️</span>Settings</a>
+      </nav>
+    </aside>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div class="topbar-title">🔄 Sync Hub</div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="user-pill"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div>
+          <button class="logout-btn" onclick="signOut()">⏻ Logout</button>
+        </div>
+      </div>
+
+      <div class="page-content" style="max-width:700px;margin:0 auto">
+        
+        <!-- Connection Status -->
+        <div class="sync-card">
+          <div class="sync-header">
+            <div class="sync-title">🌐 Connection Status</div>
+            <div class="sync-badge" id="conn-badge">Checking...</div>
+          </div>
+          <p style="font-size:13px;color:var(--tx-muted);margin:0 0 16px">
+            Hisab Rakho stores all your data locally when offline (via Firebase's IndexedDB cache) and syncs automatically when your internet is restored. No data is ever lost.
+          </p>
+          <button class="sync-btn" id="force-sync-btn" onclick="forceSync()">
+            🔄 Force Refresh & Verify Sync
+          </button>
+        </div>
+
+        <!-- Live Stats -->
+        <div class="sync-card">
+          <div class="sync-title" style="margin-bottom:14px">📊 Database Stats</div>
+          <div class="stat-row">
+            <div class="stat-box"><div class="stat-val" id="stat-sales">—</div><div class="stat-lbl">Total Sales</div></div>
+            <div class="stat-box"><div class="stat-val" id="stat-custs">—</div><div class="stat-lbl">Customers</div></div>
+            <div class="stat-box"><div class="stat-val" id="stat-prods">—</div><div class="stat-lbl">Products</div></div>
+          </div>
+          <div style="font-size:11px;color:var(--tx-muted);text-align:center">Live counts from Firestore (includes offline cache)</div>
+        </div>
+
+        <!-- Sync Activity Log -->
+        <div class="sync-card">
+          <div class="sync-header">
+            <div class="sync-title">📝 Sync Activity Log</div>
+            <button onclick="clearLog()" style="font-size:11px;background:rgba(239,68,68,0.1);border:none;color:#F87171;padding:4px 10px;border-radius:6px;cursor:pointer">Clear</button>
+          </div>
+          <div id="sync-log">
+            <div class="log-item"><div class="log-dot"></div><div><div>Sync log initialized.</div><div class="log-time">Ready</div></div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <nav class="mobile-nav"><div class="mob-nav-inner">
+    <a href="dashboard.html" class="mob-nav-item"><span class="mob-nav-icon">🏠</span>Home</a>
+    <a href="pos.html" class="mob-nav-item"><span class="mob-nav-icon">➕</span>Sale</a>
+    <a href="notifications.html" class="mob-nav-item"><span class="mob-nav-icon">🔔</span>Alerts</a>
+    <a href="sync-hub.html" class="mob-nav-item active"><span class="mob-nav-icon">🔄</span>Sync</a>
+    <a href="settings.html" class="mob-nav-item"><span class="mob-nav-icon">⚙️</span>More</a>
+  </div></nav>
+  
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');const user=JSON.parse(localStorage.getItem('hr_user')||'{}');
+      if(shop.name)document.getElementById('sb-shop').textContent=shop.name;
+      if(user.name){document.getElementById('user-nm').textContent=user.name;document.getElementById('user-av').textContent=(user.name[0]||'U').toUpperCase()}
+    })();
+
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+
+    const logEl = document.getElementById('sync-log');
+    function addLog(msg, type = 'ok') {
+      const item = document.createElement('div');
+      item.className = 'log-item';
+      const dot = type === 'fail' ? 'fail' : type === 'queue' ? 'queue' : '';
+      item.innerHTML = `<div class="log-dot ${dot}"></div><div><div>${msg}</div><div class="log-time">${new Date().toLocaleTimeString('en-PK')}</div></div>`;
+      logEl.insertBefore(item, logEl.firstChild);
+      if(logEl.children.length > 20) logEl.removeChild(logEl.lastChild);
+    }
+    
+    function clearLog() { logEl.innerHTML = ''; }
+
+    // Connection monitoring
+    function updateConnBadge(online) {
+      const badge = document.getElementById('conn-badge');
+      if(online) {
+        badge.textContent = '🟢 Online';
+        badge.className = 'sync-badge badge-online';
+        addLog('Connection restored. Firebase syncing...');
+      } else {
+        badge.textContent = '🔴 Offline — data cached locally';
+        badge.className = 'sync-badge badge-offline';
+        addLog('Connection lost. Writes queued locally.', 'queue');
+      }
+    }
+    
+    window.addEventListener('online', () => updateConnBadge(true));
+    window.addEventListener('offline', () => updateConnBadge(false));
+    
+    // Firebase sync events
+    db.enableNetwork().then(() => {
+      addLog('Firebase network channel active.');
+    }).catch(() => {});
+    
+    db.onSnapshotsInSync(() => {
+      addLog('✅ All local snapshots synced to Firestore.');
+      const badge = document.getElementById('conn-badge');
+      badge.textContent = '✅ Fully Synced';
+      badge.className = 'sync-badge badge-online';
+    });
+
+    async function loadStats() {
+      const shopId = getShopId();
+      if(!shopId) return;
+      addLog('Fetching live database stats...');
+      try {
+        const [sS, cS, pS] = await Promise.all([
+          db.collection('sales').where('shopId','==',shopId).where('deleted','==',false).get(),
+          db.collection('customers').where('shopId','==',shopId).where('deleted','==',false).get(),
+          db.collection('products').where('shopId','==',shopId).where('deleted','==',false).get()
+        ]);
+        document.getElementById('stat-sales').textContent = sS.size;
+        document.getElementById('stat-custs').textContent = cS.size;
+        document.getElementById('stat-prods').textContent = pS.size;
+        addLog(`DB stats loaded: ${sS.size} sales, ${cS.size} customers, ${pS.size} products.`);
+      } catch(e) {
+        addLog('Failed to load stats (may be offline, loading from cache).', 'fail');
+      }
+    }
+
+    async function forceSync() {
+      const btn = document.getElementById('force-sync-btn');
+      btn.disabled = true; btn.textContent = '⏳ Syncing...';
+      addLog('Force sync triggered. Disabling then re-enabling Firebase network...');
+      const badge = document.getElementById('conn-badge');
+      badge.textContent = '🔵 Syncing...'; badge.className = 'sync-badge badge-syncing';
+      try {
+        await db.disableNetwork();
+        addLog('Firebase network briefly disabled.');
+        await db.enableNetwork();
+        addLog('Firebase network re-enabled. Reconnecting...');
+        await loadStats();
+        toast('Sync complete!', 'success');
+      } catch(e) {
+        addLog('Sync failed: ' + e.message, 'fail');
+        toast('Sync failed. Check connection.', 'error');
+      }finally {
+        btn.disabled = false; btn.textContent = '🔄 Force Refresh & Verify Sync';
+      }
+    }
+
+    auth.onAuthStateChanged(user => {
+      if(!user) { location.href = 'login.html'; return; }
+      ensureShopId(user).then(() => {
+        updateConnBadge(navigator.onLine);
+        loadStats();
+      });
+    });
+  </script>
+</body>
+</html>

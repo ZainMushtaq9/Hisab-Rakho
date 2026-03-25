@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Edit Product — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:#040D12;color:#E8F0F7;min-height:100vh}
+    body.light-mode{background:#F0F4F8;color:#0D1E2E}
+    a{color:inherit;text-decoration:none}button{cursor:pointer;font-family:inherit;border:none;background:none}
+    .topbar{position:sticky;top:0;z-index:300;height:56px;background:rgba(4,13,18,.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;padding:0 20px;gap:12px}
+    body.light-mode .topbar{background:rgba(255,255,255,.95);border-bottom-color:rgba(0,0,0,.08)}
+    .back-btn{width:34px;height:34px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:inherit}
+    .topbar-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;flex:1}
+    .icon-btn{width:34px;height:34px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;color:inherit}
+    .del-btn{padding:7px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;color:#F87171;font-size:12px;font-weight:600;cursor:pointer}
+    .form-wrap{max-width:900px;margin:20px auto;padding:0 16px;display:grid;grid-template-columns:repeat(2, 1fr);gap:16px;align-items:start}
+    .form-card{background:#0D1E2E;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:24px}
+    body.light-mode .form-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    .fc-title{font-size:14px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .fg{margin-bottom:14px}
+    .fl{display:block;font-size:11px;font-weight:700;color:rgba(232,240,247,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px}
+    body.light-mode .fl{color:rgba(13,30,46,.45)}
+    .fi{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#E8F0F7;font-size:14px;padding:11px 14px;outline:none;transition:border-color .15s;min-height:44px;font-family:inherit}
+    body.light-mode .fi{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:#0D1E2E}
+    .fi::placeholder{color:rgba(232,240,247,.2)}.fi:focus{border-color:#00C9B1;box-shadow:0 0 0 3px rgba(0,201,177,.1)}
+    select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(232,240,247,0.3)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+    select.fi option{background:#071520}
+    textarea.fi{min-height:80px;resize:vertical}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .margin-preview{background:rgba(0,201,177,.06);border:1px solid rgba(0,201,177,.15);border-radius:10px;padding:12px;margin-top:8px;display:flex;justify-content:space-between;font-size:13px}
+    .margin-val{font-weight:700;color:#00C9B1}
+    .form-error{grid-column:span 2;display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:8px 12px;font-size:12px;color:#F87171;margin-bottom:10px}
+    .btn-main{grid-column:span 2;width:100%;padding:14px;background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .1s,box-shadow .15s;margin-top:8px}
+    .btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,201,177,.35)}
+    .btn-main:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .loading-overlay{position:fixed;inset:0;background:rgba(4,13,18,.8);display:flex;align-items:center;justify-content:center;z-index:999}
+    .loader{width:40px;height:40px;border:3px solid rgba(0,201,177,.15);border-top-color:#00C9B1;border-radius:50%;animation:spin .8s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:768px){
+      .form-wrap{grid-template-columns:1fr;padding:0 12px;margin-top:12px}
+      .form-error, .btn-main {grid-column: span 1;}
+      .form-card{padding:16px}
+      .row2,.row3{grid-template-columns:1fr}
+      .fi{font-size:16px}
+    }
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+
+  <div class="loading-overlay" id="loading"><div class="loader"></div></div>
+
+  <div class="topbar">
+    <button class="back-btn" onclick="history.back()">←</button>
+    <div class="topbar-title">✏️ Edit Product</div>
+    <div class="icon-btn" onclick="toggleTheme()"><span class="theme-toggle-btn">🌙</span></div>
+    <button class="del-btn" onclick="delProduct()">🗑 Delete</button>
+  </div>
+
+  <div class="form-wrap">
+    <div class="form-error" id="form-err"></div>
+    
+    <!-- LEFT COLUMN -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="form-card" style="margin-bottom:0">
+        <div class="fc-title">📋 Product Details</div>
+        <div class="fg"><label class="fl">Product Name *</label><input class="fi" id="p-name" placeholder="Product name"></div>
+        <div class="row2">
+          <div class="fg"><label class="fl">Category</label><select class="fi" id="p-cat"><option value="">Select</option><option>Beverages</option><option>Snacks</option><option>Dairy</option><option>Grocery</option><option>Electronics</option><option>Clothing</option><option>Medicine</option><option>Other</option></select></div>
+          <div class="fg"><label class="fl">Unit</label><select class="fi" id="p-unit"><option value="pcs">Pieces</option><option value="kg">Kg</option><option value="ltr">Liters</option><option value="box">Box</option><option value="pack">Pack</option><option value="dozen">Dozen</option></select></div>
+        </div>
+        <div class="fg" style="margin-bottom:0"><label class="fl">Barcode / SKU</label><input class="fi" id="p-barcode" placeholder="Barcode"></div>
+      </div>
+
+      <div class="form-card" style="margin-bottom:0">
+        <div class="fc-title">📦 Stock</div>
+        <div class="row3">
+          <div class="fg"><label class="fl">Current Stock *</label><input class="fi" id="p-stock" type="number" min="0"></div>
+          <div class="fg"><label class="fl">Low Stock</label><input class="fi" id="p-low" type="number" min="0"></div>
+          <div class="fg"><label class="fl">Min Order</label><input class="fi" id="p-minorder" type="number" min="1"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+      <div class="form-card" style="margin-bottom:0">
+        <div class="fc-title">💰 Pricing</div>
+        <div class="row2">
+          <div class="fg"><label class="fl">Purchase Price *</label><input class="fi" id="p-purchase" type="number" min="0" oninput="calcMargin()"></div>
+          <div class="fg"><label class="fl">Sale Price *</label><input class="fi" id="p-sale" type="number" min="0" oninput="calcMargin()"></div>
+        </div>
+        <div class="margin-preview"><span>Profit Margin</span><span class="margin-val" id="margin-val">Rs. 0 (0%)</span></div>
+      </div>
+
+      <div class="form-card" style="margin-bottom:0;flex:1;display:flex;flex-direction:column">
+        <div class="fc-title">📝 Notes</div>
+        <div class="fg" style="margin-bottom:0;flex:1"><textarea class="fi" id="p-notes" placeholder="Notes" style="min-height:100px;height:100%"></textarea></div>
+      </div>
+    </div>
+    <button class="btn-main" id="save-btn" onclick="saveProduct()">Update Product →</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}})();
+    const productId=new URLSearchParams(location.search).get('id');
+    if(!productId){location.href='inventory.html'}
+
+    function calcMargin(){
+      const pp=parseFloat(document.getElementById('p-purchase').value)||0;
+      const sp=parseFloat(document.getElementById('p-sale').value)||0;
+      const profit=sp-pp;const pct=pp>0?Math.round(profit/pp*100):0;
+      const el=document.getElementById('margin-val');
+      el.textContent=`Rs. ${profit.toLocaleString()} (${pct}%)`;
+      el.style.color=profit>=0?'#00C9B1':'#F87171';
+    }
+
+    async function loadProduct(){
+      try{
+        const p=await DataService.getProduct(productId);
+        if(!p){toast('Product not found','error');location.href='inventory.html';return}
+        document.getElementById('p-name').value=p.name||'';
+        document.getElementById('p-cat').value=p.category||'';
+        document.getElementById('p-unit').value=p.unit||'pcs';
+        document.getElementById('p-barcode').value=p.barcode||'';
+        document.getElementById('p-purchase').value=p.purchasePrice||0;
+        document.getElementById('p-sale').value=p.salePrice||0;
+        document.getElementById('p-stock').value=p.stock||0;
+        document.getElementById('p-low').value=p.lowStockAlert||5;
+        document.getElementById('p-minorder').value=p.minOrderQty||1;
+        document.getElementById('p-notes').value=p.notes||'';
+        calcMargin();
+      }catch(e){toast('Failed to load product: '+e.message,'error')}
+      finally{document.getElementById('loading').style.display='none'}
+    }
+
+    async function saveProduct(){
+      const name=document.getElementById('p-name').value.trim();
+      const sale=parseFloat(document.getElementById('p-sale').value);
+      const purchase=parseFloat(document.getElementById('p-purchase').value);
+      const stock=parseInt(document.getElementById('p-stock').value);
+      const err=document.getElementById('form-err');err.style.display='none';
+      if(!name){err.textContent='Product name is required';err.style.display='block';return}
+      const btn=document.getElementById('save-btn');btn.disabled=true;btn.textContent='Saving...';
+      try{
+        const all = await DataService.getProducts();
+        const exists = all.find(p => p.id !== productId && p.name.toLowerCase() === name.toLowerCase());
+        if(exists){
+          err.textContent='A product with this exact name already exists.';
+          err.style.display='block';
+          btn.disabled=false;btn.textContent='Update Product →';
+          return;
+        }
+
+        await DataService.updateProduct(productId,{
+          name,category:document.getElementById('p-cat').value,unit:document.getElementById('p-unit').value,
+          barcode:document.getElementById('p-barcode').value.trim(),purchasePrice:purchase||0,salePrice:sale||0,
+          stock:stock||0,lowStockAlert:parseInt(document.getElementById('p-low').value)||5,
+          minOrderQty:parseInt(document.getElementById('p-minorder').value)||1,notes:document.getElementById('p-notes').value.trim()
+        });
+        toast('Product updated!','success');
+        setTimeout(()=>location.href='inventory.html',1000);
+      }catch(e){err.textContent=e.message;err.style.display='block';btn.disabled=false;btn.textContent='Update Product →'}
+    }
+
+    async function delProduct(){
+      const name=document.getElementById('p-name').value;
+      if(!confirm(`Delete "${name}"?`))return;
+      try{await DataService.deleteProduct(productId,name);toast('Deleted','success');location.href='inventory.html'}
+      catch(e){toast('Delete failed: '+e.message,'error')}
+    }
+
+    auth.onAuthStateChanged(u=>{if(!u){location.href='login.html';return}loadProduct()});
+  </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bills — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#040D12">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Plus Jakarta Sans',sans-serif;background:#040D12;color:#E8F0F7;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}a{color:inherit;text-decoration:none}button{cursor:pointer;font-family:inherit;border:none;background:none}body.light-mode{background:#F0F4F8;color:#0D1E2E}
+    .sidebar{width:250px;position:fixed;top:0;left:0;bottom:0;background:#071520;border-right:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;z-index:200;overflow:hidden;transition:transform .3s}body.light-mode .sidebar{background:#fff;border-right-color:rgba(0,0,0,.08)}.sb-brand{padding:14px;border-bottom:1px solid rgba(255,255,255,.07)}.sb-logo-row{display:flex;align-items:center;gap:9px;margin-bottom:12px}.sb-logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#00C9B1,#009E8E);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}.sb-logo-text{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}.sb-logo-text em{color:#00C9B1;font-style:normal}.sb-shop-chip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:9px}.sb-shop-av{font-size:16px}.sb-shop-name{font-size:12px;font-weight:700}.sb-shop-plan{font-size:10px;font-weight:700;color:#F5A623;margin-top:1px}.sb-nav{flex:1;overflow-y:auto;padding:6px 8px}.sb-nav::-webkit-scrollbar{width:0}.sb-sec-lbl{font-size:9px;font-weight:700;color:rgba(232,240,247,.25);text-transform:uppercase;letter-spacing:.08em;padding:8px 10px 3px}.nav-link{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;font-size:13px;font-weight:500;color:rgba(232,240,247,.55);transition:all .15s;margin-bottom:1px;text-decoration:none}.nav-link:hover{background:rgba(255,255,255,.04);color:#E8F0F7}.nav-link.active{background:rgba(0,201,177,.1);color:#00C9B1;font-weight:600}.nav-ico{font-size:15px;width:20px;text-align:center;flex-shrink:0}.sb-footer{padding:10px;border-top:1px solid rgba(255,255,255,.07)}.upgrade-card{background:linear-gradient(135deg,rgba(0,201,177,.12),rgba(0,158,142,.08));border:1px solid rgba(0,201,177,.2);border-radius:12px;padding:10px 12px;text-align:center}.upgrade-title{font-size:12px;font-weight:700;color:#00C9B1}.upgrade-sub{font-size:10px;color:rgba(232,240,247,.35);margin:2px 0 8px}.upgrade-btn{width:100%;padding:7px;background:linear-gradient(135deg,#00C9B1,#009E8E);border:none;border-radius:8px;color:#040D12;font-size:11px;font-weight:700;cursor:pointer}
+    .main-area{margin-left:250px;min-height:100vh;display:flex;flex-direction:column;flex:1;min-width:0}.topbar{position:sticky;top:0;z-index:300;height:56px;background:rgba(4,13,18,.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;padding:0 20px;gap:12px}body.light-mode .topbar{background:rgba(255,255,255,.95);border-bottom-color:rgba(0,0,0,.08)}.topbar-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}.topbar-right{display:flex;align-items:center;gap:8px}.icon-btn{width:34px;height:34px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;color:inherit}.icon-btn:hover{background:rgba(0,201,177,.08)}.logout-btn{display:flex;align-items:center;gap:5px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;color:#F87171;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;white-space:nowrap}.user-pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:3px 12px 3px 3px;cursor:pointer}.user-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#00C9B1,#009E8E);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#040D12}.user-nm{font-size:12px;font-weight:600}.menu-toggle{display:none;width:34px;height:34px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:inherit}.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:190}
+    .page-content{padding:20px}
+    .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}.toolbar-search{flex:1;min-width:200px;position:relative}.toolbar-search input{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;color:#E8F0F7;font-size:14px;padding:10px 14px 10px 40px;outline:none;font-family:inherit}body.light-mode .toolbar-search input{background:#F5F7FA;border-color:rgba(0,0,0,.08);color:#0D1E2E}.toolbar-search input:focus{border-color:#00C9B1;box-shadow:0 0 0 3px rgba(0,201,177,.1)}.toolbar-search input::placeholder{color:rgba(232,240,247,.2)}.toolbar-search .ts-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:14px;color:rgba(232,240,247,.25);pointer-events:none}.toolbar-btn{padding:9px 16px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}.toolbar-btn.primary{background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border:none}.toolbar-btn.primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,201,177,.3)}
+    .date-filter{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}.df-btn{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:rgba(232,240,247,.5);transition:all .15s}.df-btn.active{background:rgba(0,201,177,.1);border-color:rgba(0,201,177,.25);color:#00C9B1}
+    .bill-list{display:flex;flex-direction:column;gap:8px}
+    .bill-card{background:#0D1E2E;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s}body.light-mode .bill-card{background:#fff;border-color:rgba(0,0,0,.08)}.bill-card:hover{border-color:rgba(0,201,177,.2);transform:translateY(-1px)}
+    .bc-ico{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+    .bc-info{flex:1;min-width:0}.bc-title{font-size:13px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.bc-meta{font-size:11px;color:rgba(232,240,247,.35);margin-top:2px}
+    .bc-right{text-align:right;flex-shrink:0}.bc-amt{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}.bc-time{font-size:10px;color:rgba(232,240,247,.3)}
+    .bc-actions{display:flex;gap:6px;flex-shrink:0}.bc-act{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all .15s}.bc-act:hover{transform:scale(1.1)}
+    .badge{display:inline-flex;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:700}.badge-green{background:rgba(16,185,129,.12);color:#34D399}.badge-gold{background:rgba(245,166,35,.12);color:#F5A623}.badge-blue{background:rgba(59,130,246,.1);color:#93C5FD}
+    .empty-state{text-align:center;padding:60px 20px;color:rgba(232,240,247,.3)}.empty-state .es-icon{font-size:48px;margin-bottom:12px}
+    .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#071520;border-top:1px solid rgba(255,255,255,.07);z-index:250;padding:4px 0;padding-bottom:env(safe-area-inset-bottom)}body.light-mode .mobile-nav{background:#fff;border-top-color:rgba(0,0,0,.08)}.mob-nav-inner{display:flex;justify-content:space-around}.mob-nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 8px;font-size:10px;font-weight:600;color:rgba(232,240,247,.4);text-decoration:none}.mob-nav-item.active{color:#00C9B1}.mob-nav-icon{font-size:18px}
+    #toast-container{position:fixed;bottom:20px;right:20px;z-index:9999}
+    @media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}.menu-toggle{display:flex}.main-area{margin-left:0}.mobile-nav{display:block}.page-content{padding:12px;padding-bottom:80px}}
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+  <div style="display:flex;min-height:100vh;width:100%">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand"><div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div><div class="sb-shop-chip"><div class="sb-shop-av">🛒</div><div><div class="sb-shop-name" id="sb-shop">Shop</div><div class="sb-shop-plan">FREE</div></div></div></div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a><a href="pos.html" class="nav-link"><span class="nav-ico">💳</span>New Sale</a><a href="inventory.html" class="nav-link"><span class="nav-ico">📦</span>Inventory</a><a href="customers.html" class="nav-link"><span class="nav-ico">👥</span>Customers</a><a href="suppliers.html" class="nav-link"><span class="nav-ico">🚚</span>Suppliers</a><a href="bills.html" class="nav-link active"><span class="nav-ico">🧾</span>Bills</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">FINANCE</div>
+        <a href="expenses.html" class="nav-link"><span class="nav-ico">💸</span>Expenses</a><a href="daily-cash.html" class="nav-link"><span class="nav-ico">💰</span>Daily Cash</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">CUSTOMER PORTAL</div>
+        <a href="shop-requests.html" class="nav-link"><span class="nav-ico">🔔</span>Requests</a>
+        
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="settings.html" class="nav-link"><span class="nav-ico">⚙️</span>Settings</a>
+      </nav>
+      <div class="sb-footer"><div class="upgrade-card"><div class="upgrade-title">⚡ Upgrade</div><div class="upgrade-sub">Unlimited bills</div><button class="upgrade-btn" onclick="location.href='subscription.html'">Rs. 999/mo →</button></div></div>
+    </aside>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button class="menu-toggle" onclick="openSidebar()">☰</button><div class="topbar-title">🧾 Bills</div></div>
+        <div class="topbar-right"><div class="icon-btn" onclick="toggleTheme()"><span class="theme-toggle-btn">🌙</span></div><div class="user-pill" onclick="location.href='settings.html'"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div><button class="logout-btn" onclick="signOut()">⏻ Logout</button></div>
+      </div>
+
+      <div class="page-content">
+        <div class="toolbar">
+          <div class="toolbar-search"><span class="ts-icon">🔍</span><input type="text" id="search" placeholder="Search bills by number or customer..." oninput="filterBills()"></div>
+          <button class="toolbar-btn primary" onclick="location.href='pos.html'">➕ New Sale</button>
+        </div>
+        <div class="date-filter">
+          <span class="df-btn active" onclick="setDateFilter('today',this)">Today</span>
+          <span class="df-btn" onclick="setDateFilter('week',this)">This Week</span>
+          <span class="df-btn" onclick="setDateFilter('month',this)">This Month</span>
+          <span class="df-btn" onclick="setDateFilter('all',this)">All Time</span>
+        </div>
+        <!-- Summary Stats Row -->
+        <div id="bills-summary" style="display:flex;gap:12px;margin-bottom:16px;background:#0D1E2E;border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:12px 16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:100px">
+            <div style="font-size:11px;color:rgba(232,240,247,.4);font-weight:600;margin-bottom:2px;text-transform:uppercase">Total Sale</div>
+            <div id="sum-sale" style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#E8F0F7">Rs. 0</div>
+          </div>
+          <div style="flex:1;min-width:100px;border-left:1px solid rgba(255,255,255,.07);padding-left:12px">
+            <div style="font-size:11px;color:rgba(232,240,247,.4);font-weight:600;margin-bottom:2px;text-transform:uppercase">Cash Received</div>
+            <div id="sum-cash" style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#34D399">Rs. 0</div>
+          </div>
+          <div style="flex:1;min-width:100px;border-left:1px solid rgba(255,255,255,.07);padding-left:12px">
+            <div style="font-size:11px;color:rgba(232,240,247,.4);font-weight:600;margin-bottom:2px;text-transform:uppercase">Credit Added</div>
+            <div id="sum-credit" style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#F87171">Rs. 0</div>
+          </div>
+        </div>
+        <div class="bill-list" id="bill-list"><div class="empty-state"><div class="es-icon">⏳</div>Loading bills...</div></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="mobile-nav"><div class="mob-nav-inner"><a href="dashboard.html" class="mob-nav-item"><span class="mob-nav-icon">🏠</span>Home</a><a href="pos.html" class="mob-nav-item"><span class="mob-nav-icon">➕</span>Sale</a><a href="inventory.html" class="mob-nav-item"><span class="mob-nav-icon">📦</span>Inventory</a><a href="customers.html" class="mob-nav-item"><span class="mob-nav-icon">👥</span>Customers</a><a href="settings.html" class="mob-nav-item"><span class="mob-nav-icon">⚙️</span>More</a></div></nav>
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');const user=JSON.parse(localStorage.getItem('hr_user')||'{}');
+      if(shop.name)document.getElementById('sb-shop').textContent=shop.name;
+      if(user.name){document.getElementById('user-nm').textContent=user.name;document.getElementById('user-av').textContent=(user.name[0]||'U').toUpperCase()}
+    })();
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+
+    let allBills=[],dateFilter='today';
+
+    function getDateStart(f){
+      const d=new Date();d.setHours(0,0,0,0);
+      if(f==='today')return d;
+      if(f==='week'){d.setDate(d.getDate()-d.getDay());return d}
+      if(f==='month'){d.setDate(1);return d}
+      return new Date(2020,0,1);
+    }
+
+    async function loadBills(){
+      try{
+        // Load all bills via DataService (handles offline + no index needed)
+        const all = await DataService.getBills(500);
+        const start = getDateStart(dateFilter);
+        allBills = dateFilter === 'all' ? all : all.filter(b => {
+          const ts = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+          return ts >= start;
+        });
+        renderBills(allBills);
+      }catch(e){console.error(e);toast('Failed to load bills','error')}
+    }
+
+    function setDateFilter(f,el){dateFilter=f;document.querySelectorAll('.df-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');loadBills()}
+
+    function filterBills(){
+      const q=(document.getElementById('search').value||'').toLowerCase().trim();
+      if(!q){renderBills(allBills);return}
+      renderBills(allBills.filter(b=>(b.billNumber||'').toLowerCase().includes(q)||(b.customerName||'').toLowerCase().includes(q)));
+    }
+
+    function renderBills(bills){
+      const el=document.getElementById('bill-list');
+      
+      let totSale=0, totCash=0, totCredit=0;
+
+      if(!bills.length){
+        document.getElementById('sum-sale').textContent = 'Rs. 0';
+        document.getElementById('sum-cash').textContent = 'Rs. 0';
+        document.getElementById('sum-credit').textContent = 'Rs. 0';
+        el.innerHTML='<div class="empty-state"><div class="es-icon">🧾</div>No bills found<br><a href="pos.html" style="color:#00C9B1;font-weight:600">Create a new sale →</a></div>';return;
+      }
+
+      el.innerHTML=bills.map(b=>{
+        const isUdhaar=b.paymentType==='udhaar';
+        const isMixed=b.paymentType==='mixed';
+        const ts=b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||Date.now());
+        const amt = b.totalAmount||b.total||0;
+        const cashRcv = typeof b.cashReceived==='number'?b.cashReceived:(isUdhaar?0:amt);
+        const creditAmt = typeof b.creditAmount==='number'?b.creditAmount:(typeof b.creditRemaining==='number'?b.creditRemaining:(isUdhaar?amt:0));
+        
+        totSale += amt;
+        totCash += cashRcv;
+        totCredit += creditAmt;
+
+        const payBadge=isUdhaar?'<span class="badge badge-gold">Credit</span>':isMixed?'<span class="badge badge-gold">Mixed</span>':b.paymentType==='card'?'<span class="badge badge-blue">Card</span>':'<span class="badge badge-green">Cash</span>';
+        
+        let details = `${b.billNumber||'—'} · ${b.itemCount||0} items`;
+        if (isUdhaar || isMixed) {
+          details += ` <br><span style="color:#34D399;font-weight:600">Cash: ${fmtCur(cashRcv)}</span> | <span style="color:#F87171;font-weight:600">Udhaar: ${fmtCur(creditAmt)}</span>`;
+        }
+
+        return`<div class="bill-card" onclick="location.href='bill-detail.html?id=${b.id}'">
+          <div class="bc-ico" style="background:${(isUdhaar||isMixed)?'rgba(245,166,35,.1)':'rgba(16,185,129,.1)'}">${isUdhaar?'📝':'🧾'}</div>
+          <div class="bc-info"><div class="bc-title">${b.customerName||'Walk-in'} ${payBadge}</div><div class="bc-meta" style="line-height:1.4">${details}</div></div>
+          <div class="bc-right"><div class="bc-amt" style="color:${(isUdhaar||isMixed)?'#F87171':'#34D399'}">${fmtCur(amt)}</div><div class="bc-time">${ts.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})}</div></div>
+          <div class="bc-actions">
+            <div class="bc-act" style="background:rgba(59,130,246,.1);color:#93C5FD" onclick="event.stopPropagation();location.href='bill-edit.html?id=${b.id}'" title="Edit">✏️</div>
+            <div class="bc-act" style="background:rgba(0,201,177,.1);color:#00C9B1" onclick="event.stopPropagation();shareBill('${b.id}')" title="Share">📤</div>
+            <div class="bc-act" style="background:rgba(239,68,68,.08);color:#F87171" onclick="event.stopPropagation();deleteBill('${b.id}')" title="Delete">🗑</div>
+          </div></div>`;
+      }).join('');
+
+      document.getElementById('sum-sale').textContent = fmtCur(totSale);
+      document.getElementById('sum-cash').textContent = fmtCur(totCash);
+      document.getElementById('sum-credit').textContent = fmtCur(totCredit);
+      if(document.body.classList.contains('light-mode')){
+         document.getElementById('bills-summary').style.background = '#fff';
+         document.getElementById('bills-summary').style.borderColor = 'rgba(0,0,0,0.08)';
+         document.getElementById('sum-sale').style.color = '#0D1E2E';
+      }
+    }
+
+    async function deleteBill(id){
+      if(!confirm('Delete this bill?'))return;
+      try{await db.collection('sales').doc(id).update({deleted:true});toast('Bill deleted','success');loadBills()}
+      catch(e){toast('Delete failed: '+e.message,'error')}
+    }
+
+    function shareBill(id){
+      const b=allBills.find(x=>x.id===id);if(!b)return;
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');
+      const text=`Bill: ${b.billNumber}\nShop: ${shop.name||''}\nCustomer: ${b.customerName||'Walk-in'}\nTotal: Rs. ${(b.totalAmount||0).toLocaleString()}\nPayment: ${b.paymentType||'Cash'}\nDate: ${formatDate(b.createdAt?.toDate?b.createdAt.toDate():b.createdAt)}`;
+      if(navigator.share){navigator.share({title:'Bill '+b.billNumber,text})}
+      else{navigator.clipboard.writeText(text);toast('Bill copied to clipboard','success')}
+    }
+
+    auth.onAuthStateChanged(u=>{if(!u){location.href='login.html';return}if(!u.emailVerified){location.href='verify-email.html';return}loadBills()});
+  </script>
+</body>
+</html>

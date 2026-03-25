@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bill Detail — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#040D12">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Plus Jakarta Sans',sans-serif;background:#040D12;color:#E8F0F7;min-height:100vh}body.light-mode{background:#F0F4F8;color:#0D1E2E}a{color:inherit;text-decoration:none}button{cursor:pointer;font-family:inherit;border:none;background:none}
+    .topbar{position:sticky;top:0;z-index:300;height:56px;background:rgba(4,13,18,.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;padding:0 20px;gap:12px}body.light-mode .topbar{background:rgba(255,255,255,.95);border-bottom-color:rgba(0,0,0,.08)}.back-btn{width:34px;height:34px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:inherit}.topbar-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;flex:1}.icon-btn{width:34px;height:34px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;color:inherit}
+    .page-wrap{max-width:600px;margin:0 auto;padding:20px 16px}
+    .bill-header{background:#0D1E2E;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:24px;margin-bottom:16px;text-align:center}body.light-mode .bill-header{background:#fff;border-color:rgba(0,0,0,.08)}
+    .bh-icon{font-size:48px;margin-bottom:12px}.bh-number{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px}.bh-date{font-size:13px;color:rgba(232,240,247,.4);margin-bottom:8px}
+    .bh-total{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:#00C9B1;margin-bottom:8px}
+    .bh-badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+    .badge{display:inline-flex;padding:4px 12px;border-radius:999px;font-size:11px;font-weight:700}.badge-green{background:rgba(16,185,129,.12);color:#34D399}.badge-gold{background:rgba(245,166,35,.12);color:#F5A623}.badge-blue{background:rgba(59,130,246,.1);color:#93C5FD}.badge-red{background:rgba(239,68,68,.1);color:#F87171}
+
+    .panel{background:#0D1E2E;border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;margin-bottom:16px}body.light-mode .panel{background:#fff;border-color:rgba(0,0,0,.08)}.panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;font-weight:700}.panel-body{padding:0}
+    .item-row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid rgba(255,255,255,.05)}.item-row:last-child{border-bottom:none}.item-name{flex:1;font-size:13px;font-weight:600}.item-qty{font-size:12px;color:rgba(232,240,247,.4);min-width:50px;text-align:center}.item-total{font-size:13px;font-weight:700;color:#00C9B1;min-width:80px;text-align:right}
+    .summary-row{display:flex;justify-content:space-between;padding:10px 18px;font-size:13px}.summary-row.total{font-size:16px;font-weight:700;padding-top:12px;border-top:1px solid rgba(255,255,255,.07)}.summary-row .sr-val{font-weight:600}
+
+    .info-row{display:flex;justify-content:space-between;padding:10px 18px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04)}.info-row:last-child{border-bottom:none}.ir-label{color:rgba(232,240,247,.4)}.ir-val{font-weight:600}
+
+    .action-strip{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}
+    .act-btn{padding:12px;border-radius:10px;font-size:13px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s;cursor:pointer}
+    .act-btn.green{background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.2);color:#25D366}.act-btn.blue{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:#93C5FD}.act-btn.teal{background:rgba(0,201,177,.1);border:1px solid rgba(0,201,177,.2);color:#00C9B1}.act-btn.red{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);color:#F87171}
+    .act-btn:hover{transform:translateY(-1px)}
+    .loading-overlay{position:fixed;inset:0;background:rgba(4,13,18,.8);display:flex;align-items:center;justify-content:center;z-index:999}.loader{width:40px;height:40px;border:3px solid rgba(0,201,177,.15);border-top-color:#00C9B1;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:480px){.page-wrap{padding:12px}.bh-total{font-size:26px}.action-strip{grid-template-columns:1fr}}
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+  <div class="loading-overlay" id="loading"><div class="loader"></div></div>
+  <div class="topbar">
+    <button class="back-btn" onclick="location.href='bills.html'">←</button>
+    <div class="topbar-title" id="pg-title">🧾 Bill Detail</div>
+    <div class="icon-btn" onclick="toggleTheme()"><span class="theme-toggle-btn">🌙</span></div>
+  </div>
+  <div class="page-wrap">
+    <div class="bill-header">
+      <div class="bh-icon">🧾</div>
+      <div class="bh-number" id="bh-num">—</div>
+      <div class="bh-date" id="bh-date">—</div>
+      <div class="bh-total" id="bh-total">Rs. 0</div>
+      <div class="bh-badges" id="bh-badges"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span>🛒 Items</span><span id="item-count" style="color:rgba(232,240,247,.4);font-weight:500">0 items</span></div>
+      <div class="panel-body" id="items-list"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span>💰 Summary</span></div>
+      <div class="panel-body" id="summary-body"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><span>📋 Details</span></div>
+      <div class="panel-body" id="details-body"></div>
+    </div>
+
+    <div class="action-strip">
+      <button class="act-btn teal" onclick="shareBill()">📤 Share Bill</button>
+      <button class="act-btn green" onclick="whatsappBill()">📱 WhatsApp</button>
+      <button class="act-btn blue" onclick="location.href='bill-edit.html?id='+billId">✏️ Edit Bill</button>
+      <button class="act-btn red" onclick="deleteBill()">🗑 Delete</button>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}})();
+    const billId=new URLSearchParams(location.search).get('id');
+    if(!billId)location.href='bills.html';
+    let billData=null;
+
+    async function loadBill(){
+      try{
+        const doc = await DataService._fastDoc(db.collection('sales').doc(billId));
+        if(!doc.exists){toast('Bill not found','error');location.href='bills.html';return}
+        billData={id:doc.id,...doc.data()};
+        renderBill(billData);
+        // Load items from flat sale_items collection
+        const itemsSnap = await DataService._fastQuery(
+          db.collection('sale_items').where('saleId','==',billId)
+        );
+        const items = itemsSnap.docs.map(d=>d.data());
+        renderItems(items);
+      }catch(e){console.error(e);toast('Failed to load bill','error')}
+      finally{document.getElementById('loading').style.display='none'}
+    }
+
+    function renderBill(b){
+      const ts=b.createdAt?.toDate?b.createdAt.toDate():new Date(b.createdAt||Date.now());
+      document.getElementById('bh-num').textContent=b.billNumber||'—';
+      document.getElementById('bh-date').textContent=ts.toLocaleDateString('en-PK',{weekday:'long',year:'numeric',month:'long',day:'numeric'})+' · '+ts.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+      document.getElementById('bh-total').textContent='Rs. '+(b.totalAmount||b.total||0).toLocaleString();
+
+      const isUdhaar=b.paymentType==='udhaar';
+      let badges='';
+      if(isUdhaar)badges+='<span class="badge badge-gold">📝 Credit (Udhaar)</span>';
+      else if(b.paymentType==='card')badges+='<span class="badge badge-blue">💳 Card</span>';
+      else badges+='<span class="badge badge-green">💵 Cash</span>';
+      document.getElementById('bh-badges').innerHTML=badges;
+
+      // Summary
+      document.getElementById('summary-body').innerHTML=`
+        <div class="summary-row"><span>Subtotal</span><span class="sr-val">Rs. ${(b.subtotal||0).toLocaleString()}</span></div>
+        <div class="summary-row"><span>Discount</span><span class="sr-val" style="color:#F87171">- Rs. ${(b.discount||0).toLocaleString()}</span></div>
+        <div class="summary-row total"><span>Total</span><span class="sr-val" style="color:#00C9B1">Rs. ${(b.totalAmount||b.total||0).toLocaleString()}</span></div>`;
+
+      // Details
+      document.getElementById('details-body').innerHTML=`
+        <div class="info-row"><span class="ir-label">Customer</span><span class="ir-val">${b.customerName||'Walk-in'}</span></div>
+        <div class="info-row"><span class="ir-label">Payment</span><span class="ir-val">${(b.paymentType||'cash').charAt(0).toUpperCase()+(b.paymentType||'cash').slice(1)}</span></div>
+        <div class="info-row"><span class="ir-label">Items</span><span class="ir-val">${b.itemCount||0}</span></div>
+        <div class="info-row"><span class="ir-label">Shop</span><span class="ir-val">${b.shopName||'—'}</span></div>`;
+    }
+
+    function renderItems(items){
+      const el=document.getElementById('items-list');
+      document.getElementById('item-count').textContent=items.length+' items';
+      if(!items.length){el.innerHTML='<div style="padding:20px;text-align:center;color:rgba(232,240,247,.3)">No items</div>';return}
+      el.innerHTML=items.map(i=>`
+        <div class="item-row">
+          <div class="item-name">${i.name||'Product'}<div style="font-size:10px;color:rgba(232,240,247,.3)">Rs. ${(i.salePrice||0).toLocaleString()} each</div></div>
+          <div class="item-qty">× ${i.qty||1}</div>
+          <div class="item-total">Rs. ${(i.total||0).toLocaleString()}</div>
+        </div>`).join('');
+    }
+
+    function shareBill(){
+      if(!billData)return;
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');
+      const text=`🧾 Bill: ${billData.billNumber}\n🏪 ${shop.name||''}\n👤 ${billData.customerName||'Walk-in'}\n💰 Total: Rs. ${(billData.totalAmount||0).toLocaleString()}\n💳 ${billData.paymentType||'Cash'}\n📅 ${formatDate(billData.createdAt?.toDate?billData.createdAt.toDate():billData.createdAt)}`;
+      if(navigator.share){navigator.share({title:'Bill '+billData.billNumber,text})}
+      else{navigator.clipboard.writeText(text);toast('Copied to clipboard','success')}
+    }
+
+    function whatsappBill(){
+      if(!billData)return;
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');
+      const text=`🧾 *Bill: ${billData.billNumber}*\n🏪 ${shop.name||''}\n👤 ${billData.customerName||'Walk-in'}\n💰 *Total: Rs. ${(billData.totalAmount||0).toLocaleString()}*\n💳 ${billData.paymentType||'Cash'}\n\nThank you for shopping with us! 🙏`;
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`,'_blank');
+    }
+
+    async function deleteBill(){
+      if(!confirm('Delete this bill permanently?'))return;
+      try{await db.collection('sales').doc(billId).update({deleted:true});toast('Bill deleted','success');setTimeout(()=>location.href='bills.html',1000)}
+      catch(e){toast('Delete failed: '+e.message,'error')}
+    }
+
+    auth.onAuthStateChanged(u=>{if(!u){location.href='login.html';return}loadBill()});
+  </script>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Inventory — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    /* ── INVENTORY SPECIFIC ── */
+    .inv-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+    .inv-stat{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+    .inv-stat-val{font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:2px}
+    .inv-stat-lbl{font-size:11px;color:var(--tx-muted)}
+
+    .tbl-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+    table{width:100%;border-collapse:collapse}
+    th{text-align:left;padding:10px 16px;font-size:11px;font-weight:700;color:var(--tx-muted);text-transform:uppercase;letter-spacing:.3px;background:rgba(255,255,255,.02);border-bottom:1px solid var(--border)}
+    body.light-mode th{background:rgba(0,0,0,.02)}
+    td{padding:12px 16px;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;vertical-align:middle}
+    body.light-mode td{border-bottom-color:rgba(0,0,0,.04)}
+    tr:last-child td{border-bottom:none}
+    tr:hover{background:var(--bg-hover)}
+    
+    .row-name{font-weight:600}
+    .row-actions{display:flex;gap:6px}
+    .row-act{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all .15s}
+    .row-act.edit{background:rgba(59,130,246,.1);color:#93C5FD}.row-act.edit:hover{background:rgba(59,130,246,.2)}
+    .row-act.del{background:rgba(239,68,68,.08);color:#F87171}.row-act.del:hover{background:rgba(239,68,68,.18)}
+
+    /* Mobile Responsive Table */
+    .m-card-list{display:none}
+    .m-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+    .m-card:hover{border-color:rgba(0,201,177,.2)}
+    .m-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+    .m-card-name{font-size:14px;font-weight:700}
+    .m-card-row{display:flex;justify-content:space-between;font-size:12px;color:rgba(232,240,247,.4);margin-top:4px}
+    body.light-mode .m-card-row{color:rgba(13,30,46,.45)}
+
+    @media(max-width:768px){
+      .inv-stats{grid-template-columns:1fr 1fr 1fr;gap:6px}
+      .inv-stat{padding:10px}
+      .inv-stat-val{font-size:16px}
+      .tbl-wrap{display:none}
+      .m-card-list{display:block}
+    }
+    @media(max-width:480px){
+      .inv-stats{grid-template-columns:1fr}
+    }
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+  <div style="display:flex;min-height:100vh">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand"><div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div>
+        <div class="sb-shop-chip"><div class="sb-shop-av">🛒</div><div><div class="sb-shop-name" id="sb-shop">Shop</div><div class="sb-shop-plan">FREE</div></div></div></div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a>
+        <a href="pos.html" class="nav-link"><span class="nav-ico">💳</span>New Sale</a>
+        <a href="inventory.html" class="nav-link active"><span class="nav-ico">📦</span>Inventory</a>
+        <a href="customers.html" class="nav-link"><span class="nav-ico">👥</span>Customers</a>
+        <a href="suppliers.html" class="nav-link"><span class="nav-ico">🚚</span>Suppliers</a>
+        <a href="bills.html" class="nav-link"><span class="nav-ico">🧾</span>Bills</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">FINANCE</div>
+        <a href="expenses.html" class="nav-link"><span class="nav-ico">💸</span>Expenses</a>
+        <a href="daily-cash.html" class="nav-link"><span class="nav-ico">💰</span>Daily Cash</a>
+        <a href="returns.html" class="nav-link"><span class="nav-ico">↩</span>Returns</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">CUSTOMER PORTAL</div>
+        <a href="shop-requests.html" class="nav-link"><span class="nav-ico">🔔</span>Requests</a>
+        
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="settings.html" class="nav-link"><span class="nav-ico">⚙️</span>Settings</a>
+      </nav>
+      <div class="sb-footer"><div class="upgrade-card"><div class="upgrade-title">⚡ Upgrade to Pro</div><div class="upgrade-sub">Unlimited products</div><button class="upgrade-btn" onclick="location.href='subscription.html'">Rs. 999/mo →</button></div></div>
+    </aside>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div class="topbar-title">📦 Inventory</div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="user-pill" onclick="location.href='settings.html'"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div>
+          <button class="logout-btn" onclick="signOut()">⏻ Logout</button>
+        </div>
+      </div>
+
+      <div class="page-content">
+        <!-- Stats -->
+        <div class="inv-stats">
+          <div class="inv-stat"><div class="inv-stat-val" id="is-total" style="color:#93C5FD">—</div><div class="inv-stat-lbl">Total Products</div></div>
+          <div class="inv-stat"><div class="inv-stat-val" id="is-value" style="color:#34D399">—</div><div class="inv-stat-lbl">Stock Value</div></div>
+          <div class="inv-stat"><div class="inv-stat-val" id="is-low" style="color:#F87171">—</div><div class="inv-stat-lbl">Low Stock Items</div></div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+          <div class="toolbar-search">
+            <span class="ts-icon">🔍</span>
+            <input type="text" id="search" placeholder="Search products..." oninput="filterProducts()">
+          </div>
+          <button class="toolbar-btn primary" onclick="location.href='inventory-add.html'">➕ Add Product</button>
+        </div>
+
+        <div class="filter-chips" style="margin-bottom:14px">
+          <span class="chip active" onclick="setFilter('all',this)">All</span>
+          <span class="chip" onclick="setFilter('low',this)">⚠ Low Stock</span>
+          <span class="chip" onclick="setFilter('out',this)">🔴 Out of Stock</span>
+          <span class="chip" onclick="setFilter('insight',this)" style="background:rgba(139,92,246,0.15);color:#A78BFA;border:1px solid rgba(167,139,250,0.3);padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer">✨ AI Insights</span>
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Product</th><th>Price</th><th>Purchase</th><th>Stock</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="inv-tbody">
+              <tr><td colspan="6" style="text-align:center;padding:40px;color:rgba(232,240,247,.3)">⏳ Loading...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div class="m-card-list" id="inv-cards"></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="mobile-nav"><div class="mob-nav-inner">
+    <a href="dashboard.html" class="mob-nav-item"><span class="mob-nav-icon">🏠</span>Home</a>
+    <a href="pos.html" class="mob-nav-item"><span class="mob-nav-icon">➕</span>Sale</a>
+    <a href="inventory.html" class="mob-nav-item active"><span class="mob-nav-icon">📦</span>Inventory</a>
+    <a href="customers.html" class="mob-nav-item"><span class="mob-nav-icon">👥</span>Customers</a>
+    <a href="settings.html" class="mob-nav-item"><span class="mob-nav-icon">⚙️</span>More</a>
+  </div></nav>
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');const user=JSON.parse(localStorage.getItem('hr_user')||'{}');
+      if(shop.name)document.getElementById('sb-shop').textContent=shop.name;
+      if(user.name){document.getElementById('user-nm').textContent=user.name;document.getElementById('user-av').textContent=(user.name[0]||'U').toUpperCase()}
+    })();
+
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+
+    let allProducts=[],currentFilter='all';
+    let productInsights = {}; // Holds { velocity, daysLeft, sold30 }
+
+    async function loadProducts(){
+      try{
+        const prods=await DataService.getProducts();
+        allProducts=prods;
+        document.getElementById('is-total').textContent=prods.length;
+        const stockVal=prods.reduce((s,p)=>s+((p.purchasePrice||0)*(p.stock||0)),0);
+        document.getElementById('is-value').textContent=fmtCur(stockVal);
+        const lowCount=prods.filter(p=>(p.stock||0)<=(p.lowStockAlert||5)).length;
+        document.getElementById('is-low').textContent=lowCount;
+
+        // Auto-show low stock if URL filter
+        if(new URLSearchParams(location.search).get('filter')==='low'){setFilter('low',document.querySelectorAll('.chip')[1])}
+        else renderProducts(prods);
+        
+        // Background AI Insights Calc
+        calculateInsights();
+      }catch(e){console.error(e);toast('Failed to load products','error')}
+    }
+
+    async function calculateInsights() {
+      try {
+        const d = new Date(); d.setDate(d.getDate() - 30);
+        const snap = await db.collection('sale_items')
+          .where('shopId', '==', getShopId())
+          .where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(d))
+          .get();
+          
+        let salesMap = {};
+        snap.forEach(doc => {
+           const data = doc.data();
+           if(data.productId && data.productId !== 'custom') {
+              salesMap[data.productId] = (salesMap[data.productId] || 0) + (data.qty || 1);
+           }
+        });
+        
+        allProducts.forEach(p => {
+           let sold30 = salesMap[p.id] || 0;
+           let velocity = sold30 / 30; // sold per day
+           let daysLeft = velocity > 0 ? (p.stock || 0) / velocity : 999;
+           productInsights[p.id] = { velocity, daysLeft, sold30 };
+        });
+        
+        if(currentFilter === 'insight') filterProducts();
+      } catch(e) { console.warn("AI Insight Calculation failed", e); }
+    }
+
+    function setFilter(f,el){
+      currentFilter=f;
+      document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+      el.classList.add('active');
+      filterProducts();
+    }
+
+    function filterProducts(){
+      let filtered=[...allProducts];
+      const q=(document.getElementById('search').value||'').toLowerCase().trim();
+      if(q)filtered=filtered.filter(p=>(p.name||'').toLowerCase().includes(q)||(p.barcode||'').includes(q));
+      if(currentFilter==='low')filtered=filtered.filter(p=>(p.stock||0)<=(p.lowStockAlert||5)&&(p.stock||0)>0);
+      if(currentFilter==='out')filtered=filtered.filter(p=>!p.stock||p.stock===0);
+      if(currentFilter==='insight') {
+         // Insight: Only show items predicted to run out in <= 7 days that are currently IN stock
+         filtered=filtered.filter(p => {
+            const ins = productInsights[p.id];
+            return ins && ins.daysLeft <= 7 && (p.stock||0) > 0;
+         }).sort((a,b) => productInsights[a.id].daysLeft - productInsights[b.id].daysLeft);
+      }
+      renderProducts(filtered);
+    }
+
+    function renderProducts(prods){
+      const tbody=document.getElementById('inv-tbody');
+      const cards=document.getElementById('inv-cards');
+      if(!prods.length){
+        tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state"><div class="es-icon">📦</div>No products found<br><a href="inventory-add.html" style="color:#00C9B1;font-weight:600">Add your first product →</a></div></td></tr>`;
+        cards.innerHTML=`<div class="empty-state"><div class="es-icon">📦</div>No products found</div>`;
+        return;
+      }
+      tbody.innerHTML=prods.map(p=>{
+        const stock=p.stock||0;const low=p.lowStockAlert||5;
+        let status=stock===0?'<span class="badge badge-red">Out</span>':stock<=low?'<span class="badge badge-gold">Low</span>':'<span class="badge badge-green">OK</span>';
+        
+        // Inject AI prediction if on Insights tab
+        if(currentFilter === 'insight' && productInsights[p.id]) {
+           const left = Math.max(0, Math.round(productInsights[p.id].daysLeft));
+           status = `<span style="display:inline-block;background:rgba(139,92,246,0.1);color:#A78BFA;font-size:10px;font-weight:700;padding:4px 8px;border-radius:6px;white-space:nowrap">0 in ${left} day${left!==1?'s':''}</span>`;
+        }
+        
+        return`<tr onclick="location.href='inventory-edit.html?id=${p.id}'">
+          <td><div class="row-name">${p.name}</div><div style="font-size:10px;color:rgba(232,240,247,.3)">${p.category||'—'}</div></td>
+          <td style="font-weight:600;color:#00C9B1">Rs. ${(p.salePrice||0).toLocaleString()}</td>
+          <td style="color:rgba(232,240,247,.5)">Rs. ${(p.purchasePrice||0).toLocaleString()}</td>
+          <td>${stock} ${p.unit||'pcs'}</td>
+          <td>${status}</td>
+          <td><div class="row-actions"><div class="row-act edit" onclick="event.stopPropagation();location.href='inventory-edit.html?id=${p.id}'">✏️</div><div class="row-act del" onclick="event.stopPropagation();delProduct('${p.id}','${p.name}')">🗑</div></div></td></tr>`;
+      }).join('');
+
+      cards.innerHTML=prods.map(p=>{
+        const stock=p.stock||0;const low=p.lowStockAlert||5;
+        let status=stock===0?'<span class="badge badge-red">Out</span>':stock<=low?'<span class="badge badge-gold">Low</span>':'<span class="badge badge-green">OK</span>';
+        
+        if(currentFilter === 'insight' && productInsights[p.id]) {
+           const left = Math.max(0, Math.round(productInsights[p.id].daysLeft));
+           status = `<span style="display:inline-block;background:rgba(139,92,246,0.1);color:#A78BFA;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">Empty in ${left}d</span>`;
+        }
+
+        return`<div class="m-card" onclick="location.href='inventory-edit.html?id=${p.id}'">
+          <div class="m-card-top"><div class="m-card-name">${p.name}</div>${status}</div>
+          <div class="m-card-row"><span>Price: Rs. ${(p.salePrice||0).toLocaleString()}</span><span>Stock: ${stock} ${p.unit||''}</span></div></div>`;
+      }).join('');
+    }
+
+    async function delProduct(id,name){
+      if(!confirm(`Delete "${name}"? This will hide it from inventory.`))return;
+      try{await DataService.deleteProduct(id,name);toast(`${name} deleted`,'success');loadProducts()}
+      catch(e){toast('Delete failed: '+e.message,'error')}
+    }
+
+    auth.onAuthStateChanged(async user=>{
+      if(!user){location.href='login.html';return}
+      await ensureShopId(user);
+      loadProducts();
+    });
+  </script>
+</body>
+</html>

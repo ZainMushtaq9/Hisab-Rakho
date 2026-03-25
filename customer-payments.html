@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Payments & Dues — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    .page-content{padding:20px;max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:20px;min-height:calc(100vh - 56px)}
+    
+    .due-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;justify-content:space-between;align-items:center;transition:transform .2s,border-color .2s}
+    body.light-mode .due-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    
+    .dc-left{display:flex;flex-direction:column;gap:6px}
+    .dc-shop{font-weight:700;font-size:15px;display:flex;align-items:center;gap:6px}
+    .dc-shop-ic{width:24px;height:24px;background:rgba(255,255,255,.05);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px}
+    body.light-mode .dc-shop-ic{background:#F1F5F9}
+    .dc-detail{font-size:12px;color:var(--tx-muted)}
+    
+    .dc-right{text-align:right;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+    .dc-amt{font-family:var(--font-display);font-size:20px;font-weight:800;color:#F87171}
+    .btn-pay{padding:6px 14px;background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer}
+    .btn-pay:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,201,177,.3)}
+    
+    .proof-list{margin-top:20px;display:flex;flex-direction:column;gap:12px}
+    .pl-title{font-family:var(--font-display);font-size:16px;font-weight:700;margin-bottom:8px}
+    .pr-card{background:rgba(0,0,0,.15);border:1px dashed var(--border);border-radius:10px;padding:12px;display:flex;justify-content:space-between;align-items:center}
+    body.light-mode .pr-card{background:#F8FAFC}
+    .pr-st{font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;background:rgba(245,158,11,.1);color:#F59E0B}
+
+    .empty-state{text-align:center;padding:60px 20px;background:var(--bg-card);border:1px dashed var(--border);border-radius:16px}
+    body.light-mode .empty-state{background:#fff;border-color:rgba(0,0,0,.1)}
+    
+    /* MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(4,13,18,.8);backdrop-filter:blur(4px);z-index:900;display:none;align-items:center;justify-content:center;padding:20px}
+    .modal-overlay.open{display:flex}
+    .modal-box{background:var(--bg-card);width:100%;max-width:400px;border-radius:16px;border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;transform:scale(.95);opacity:0;transition:all .2s}
+    body.light-mode .modal-box{background:#fff;border-color:rgba(0,0,0,.08)}
+    .modal-overlay.open .modal-box{transform:scale(1);opacity:1}
+    .m-head{padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center}
+    .m-title{font-family:var(--font-display);font-size:16px;font-weight:700}
+    .m-close{background:none;border:none;color:var(--tx-muted);font-size:24px;cursor:pointer;line-height:1}
+    .m-body{padding:20px}
+    
+    .fg{margin-bottom:16px}
+    .fl{display:block;font-size:11px;font-weight:700;color:var(--tx-muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+    .fi{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#E8F0F7;font-size:14px;padding:11px 14px;outline:none}
+    body.light-mode .fi{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:#0D1E2E}
+    .fi:focus{border-color:#00C9B1;box-shadow:0 0 0 3px rgba(0,201,177,.1)}
+    
+    .btn-main{width:100%;padding:12px;background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer}
+    .btn-main:disabled{opacity:.5;cursor:not-allowed}
+    
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
+      .menu-toggle{display:flex}.main-area{margin-left:0}
+    }
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'owner') location.href='dashboard.html';</script>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <div style="display:flex;min-height:100vh">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div>
+        <div class="sb-shop-chip"><div class="sb-shop-av">👤</div><div><div class="sb-shop-name">Customer Portal</div><div class="sb-shop-plan shoppl">Active</div></div></div>
+      </div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="customer-dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a>
+        <a href="customer-orders.html" class="nav-link"><span class="nav-ico">🛒</span>Order Items</a>
+        <a href="customer-payments.html" class="nav-link active"><span class="nav-ico">💳</span>Payments</a>
+        <a href="customer-shops.html" class="nav-link"><span class="nav-ico">🏪</span>My Shops</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="#" class="nav-link"><span class="nav-ico">⚙️</span>Profile & Privacy</a>
+      </nav>
+      <div class="sb-footer">
+        <div class="upgrade-card"><div class="upgrade-title">Secure Hub</div><div class="upgrade-sub">Customer Edition</div></div>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div class="topbar-title">💳 Pending Dues & Payments</div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="user-pill"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div>
+          <button class="logout-btn" onclick="signOut()">⏻ Logout</button>
+        </div>
+      </div>
+
+      <div class="page-content">
+        
+        <div id="unpaid-list">
+           <div style="text-align:center;padding:40px;opacity:.5">Loading dues...</div>
+        </div>
+        
+        <div class="proof-list">
+           <div class="pl-title">Submitted Proofs (Pending Approval)</div>
+           <div id="pending-proofs">
+              <div style="font-size:12px;color:rgba(232,240,247,.4);padding:10px">No pending proofs.</div>
+           </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Submit Payment Proof Modal -->
+  <div class="modal-overlay" id="pay-modal">
+    <div class="modal-box">
+      <div class="m-head">
+        <div class="m-title">Upload Payment Details</div>
+        <button class="m-close" onclick="closePayModal()">×</button>
+      </div>
+      <div class="m-body">
+        <input type="hidden" id="p-shop-id">
+        <input type="hidden" id="p-bill-id">
+        <input type="hidden" id="p-cust-id">
+        
+        <div class="fg">
+          <label class="fl">Amount Paid (Rs.)</label>
+          <input type="number" id="p-amt" class="fi" placeholder="e.g. 5000">
+        </div>
+        
+        <div class="fg">
+          <label class="fl">Reference / Trx ID / Note</label>
+          <input type="text" id="p-note" class="fi" placeholder="e.g. Sent via EasyPaisa 03xx...">
+        </div>
+        
+        <button class="btn-main" id="btn-submit" onclick="submitProof()">Submit for Approval</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}})();
+    
+    let currentUser = null;
+    let linkedShops = [];
+    
+    function openPayModal(shopId, billId, custId, maxAmt){
+       document.getElementById('p-shop-id').value = shopId;
+       document.getElementById('p-bill-id').value = billId;
+       document.getElementById('p-cust-id').value = custId;
+       document.getElementById('p-amt').value = maxAmt;
+       document.getElementById('p-amt').max = maxAmt;
+       document.getElementById('p-note').value = '';
+       document.getElementById('pay-modal').classList.add('open');
+    }
+    function closePayModal(){ document.getElementById('pay-modal').classList.remove('open'); }
+
+    async function initPage(){
+       try {
+          const linksSnap = await db.collection('customer_shop_links').where('customerId', '==', currentUser.uid).get();
+          
+          linkedShops = linksSnap.docs.map(d=>d.data()).filter(d=>d.status==='active');
+          if(linkedShops.length === 0){
+             document.getElementById('unpaid-list').innerHTML = `<div class="empty-state">No shops connected.</div>`;
+             return;
+          }
+          
+          let unpaidHtml = '';
+          let proofsHtml = '';
+          
+          for(let link of linkedShops){
+             try {
+                const sdoc = await db.collection('shops').doc(link.shopId).get();
+                const sname = sdoc.exists ? sdoc.data().name : 'Shop';
+                
+                // 1. Fetch unpaid bills
+                if(link.shopCustomerId){
+                   const bsnap = await db.collection('shops').doc(link.shopId).collection('bills')
+                       .where('customerId', '==', link.shopCustomerId).get();
+                       
+                   bsnap.forEach(b => {
+                      const data = b.data();
+                      const net = data.total - (data.cashReceived||0);
+                      if(net > 0 && data.paymentMethod !== 'cash'){
+                         const dt = data.createdAt?.toDate ? formatDateTime(data.createdAt.toDate()) : '-';
+                         unpaidHtml += `
+                         <div class="due-card">
+                           <div class="dc-left">
+                             <div class="dc-shop"><div class="dc-shop-ic">🏪</div> ${sname}</div>
+                             <div class="dc-detail">Bill #${b.id.substring(0,6).toUpperCase()} • ${dt}</div>
+                           </div>
+                           <div class="dc-right">
+                             <div class="dc-amt">${fmtCur(net)}</div>
+                             <button class="btn-pay" onclick="openPayModal('${link.shopId}','${b.id}','${link.shopCustomerId}',${net})">Mark Paid</button>
+                           </div>
+                         </div>
+                         `;
+                      }
+                   });
+                   
+                   // 2. Fetch pending proofs
+                   const psnap = await db.collection('shops').doc(link.shopId).collection('payment_proofs')
+                      .where('customerId', '==', link.shopCustomerId).where('status','==','pending').get();
+                      
+                   psnap.forEach(p => {
+                      const pd = p.data();
+                      const pdt = pd.createdAt?.toDate ? formatDateTime(pd.createdAt.toDate()) : '-';
+                      proofsHtml += `
+                      <div class="pr-card">
+                        <div>
+                           <div style="font-size:13px;font-weight:700">${sname}</div>
+                           <div style="font-size:11px;color:var(--tx-muted);margin-top:2px">Ref: ${pd.note || '-'} • ${pdt}</div>
+                        </div>
+                        <div style="text-align:right">
+                           <div style="font-family:var(--font-display);font-size:15px;font-weight:800;color:#00C9B1">${fmtCur(pd.amount)}</div>
+                           <div class="pr-st">Under Review</div>
+                        </div>
+                      </div>
+                      `;
+                   });
+                }
+             } catch(e) {console.error(e);}
+          }
+          
+          document.getElementById('unpaid-list').innerHTML = unpaidHtml || `<div class="empty-state">🎉 You have no unpaid bills!</div>`;
+          if(proofsHtml) document.getElementById('pending-proofs').innerHTML = proofsHtml;
+          else document.getElementById('pending-proofs').innerHTML = `<div style="font-size:12px;color:rgba(232,240,247,.4);padding:10px">No pending proofs.</div>`;
+          
+       } catch(e) {
+          toast('Error loading payments', 'error');
+       }
+    }
+
+    async function submitProof(){
+       const shopId = document.getElementById('p-shop-id').value;
+       const billId = document.getElementById('p-bill-id').value;
+       const custId = document.getElementById('p-cust-id').value;
+       const amt = parseFloat(document.getElementById('p-amt').value);
+       const note = document.getElementById('p-note').value.trim();
+       
+       if(!amt || amt <= 0) return toast('Invalid amount','error');
+       if(!note) return toast('Please provide a reference or note','error');
+       
+       const btn = document.getElementById('btn-submit');
+       btn.disabled = true; btn.textContent = 'Submitting...';
+       
+       try {
+          await db.collection('shops').doc(shopId).collection('payment_proofs').add({
+             customerId: custId,
+             billId: billId,
+             amount: amt,
+             note: note,
+             status: 'pending',
+             createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          
+          toast('Payment proof submitted!', 'success');
+          closePayModal();
+          initPage();
+       } catch(e) {
+          toast('Failed to submit: '+e.message, 'error');
+       }
+       btn.disabled = false; btn.textContent = 'Submit for Approval';
+    }
+
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+    function signOut(){firebase.auth().signOut().then(()=>location.href='login.html')}
+    firebase.auth().onAuthStateChanged(async user=>{
+      if(!user) location.href='login.html';
+      else {
+         currentUser = user;
+         const localU = localStorage.getItem('hr_user');
+         if(localU){
+            const parsed = JSON.parse(localU);
+            
+            document.getElementById('user-nm').textContent = parsed.name || user.email.split('@')[0];
+            document.getElementById('user-av').textContent = (parsed.name || user.email)[0].toUpperCase();
+         }
+         initPage();
+      }
+    });
+  </script>
+</body>
+</html>

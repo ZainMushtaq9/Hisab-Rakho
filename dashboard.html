@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dashboard — Hisab Rakho</title>
+  <meta name="description" content="Hisab Rakho Dashboard — View your shop performance">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    /* ── DASHBOARD-SPECIFIC STYLES ── */
+    #ad-banner-slot{display:none;margin-bottom:16px}
+    #broadcast-msgs{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+    .qa-strip{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+    .qa-btn{display:flex;align-items:center;gap:7px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;color:var(--tx-primary);cursor:pointer;transition:all .15s;white-space:nowrap}
+    body.light-mode .qa-btn{background:#fff;border-color:rgba(0,0,0,.08);color:#0D1E2E}
+    .qa-btn:hover{border-color:rgba(0,201,177,.25);background:rgba(0,201,177,.06);color:#00C9B1}
+    .qa-btn.primary{background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border-color:transparent;box-shadow:0 4px 18px rgba(0,201,177,.28)}
+    .qa-btn.primary:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,201,177,.38)}
+    .chart-wrap{padding:14px 18px 16px}
+    .chart-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--tx-muted);margin-top:5px;padding:0 2px}
+    .main-grid{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+    .ulist-row{display:flex;align-items:center;gap:11px;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s}
+    .ulist-row:last-child{border-bottom:none}.ulist-row:hover{background:var(--bg-hover)}
+    .u-av{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;background:rgba(0,201,177,.1);color:#00C9B1}
+    .u-info{flex:1;min-width:0}.u-name{font-size:13px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .u-phone{font-size:10px;color:var(--tx-muted)}.u-bal{font-family:var(--font-display);font-size:13px;font-weight:700;color:#F87171}
+    .wa-btn{width:30px;height:30px;border-radius:50%;background:rgba(37,211,102,.1);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;flex-shrink:0}
+    .wa-btn:hover{background:rgba(37,211,102,.22)}
+    .txn-row{display:flex;align-items:center;gap:11px;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,.05);cursor:pointer;transition:background .15s}
+    .txn-row:last-child{border-bottom:none}.txn-row:hover{background:var(--bg-hover)}
+    .txn-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+    .txn-info{flex:1}.txn-name{font-size:13px;font-weight:600}.txn-meta{font-size:10px;color:var(--tx-muted)}
+    .txn-amt{font-family:var(--font-display);font-size:13px;font-weight:700}
+    .stock-row{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.05)}
+    .stock-row:last-child{border-bottom:none}.stock-name{font-size:13px}
+    .health-card{display:flex;flex-direction:column;align-items:center;padding:20px 16px}
+    .health-ring{position:relative;margin-bottom:10px}
+    .ring-text{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .ring-score{font-family:var(--font-display);font-size:28px;font-weight:800}
+    .ring-label{font-size:10px;color:var(--tx-muted)}
+    .health-desc{font-size:11px;color:var(--tx-muted);text-align:center;line-height:1.5}
+    @media(max-width:850px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:1024px){.main-grid{grid-template-columns:1fr}}
+    @media(max-width:768px){.qa-btn{font-size:12px;padding:8px 12px}}
+    @media(max-width:480px){.stats-grid{grid-template-columns:1fr 1fr;gap:8px}.stat-card{padding:12px}.stat-value{font-size:18px}}
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+
+  <!-- SIDEBAR OVERLAY (mobile) -->
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <div style="display:flex;min-height:100vh">
+
+    <!-- ══ SIDEBAR ══ -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <div class="sb-logo-row">
+          <div class="sb-logo-icon">🏪</div>
+          <div class="sb-logo-text">Hisab <em>Rakho</em></div>
+        </div>
+        <div class="sb-shop-chip" onclick="location.href='settings-shop.html'">
+          <div class="sb-shop-av">🛒</div>
+          <div>
+            <div class="sb-shop-name" id="sb-shop">Loading...</div>
+            <div class="sb-shop-plan shoppl" id="sb-plan">FREE</div>
+          </div>
+        </div>
+      </div>
+
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="dashboard.html" class="nav-link active"><span class="nav-ico">🏠</span>Dashboard</a>
+        <a href="pos.html" class="nav-link"><span class="nav-ico">💳</span>New Sale / POS</a>
+        <a href="inventory.html" class="nav-link"><span class="nav-ico">📦</span>Inventory</a>
+        <a href="customers.html" class="nav-link"><span class="nav-ico">👥</span>Customers</a>
+        <a href="suppliers.html" class="nav-link"><span class="nav-ico">🚚</span>Suppliers</a>
+        <a href="bills.html" class="nav-link"><span class="nav-ico">🧾</span>Bills</a>
+
+        <div class="sb-sec-lbl" style="margin-top:10px">FINANCE</div>
+        <a href="expenses.html" class="nav-link"><span class="nav-ico">💸</span>Expenses</a>
+        <a href="daily-cash.html" class="nav-link"><span class="nav-ico">💰</span>Daily Cash</a>
+        <a href="returns.html" class="nav-link"><span class="nav-ico">↩</span>Returns</a>
+        <a href="shop-items.html" class="nav-link"><span class="nav-ico">🏬</span>Shop Items</a>
+
+        <div class="sb-sec-lbl" style="margin-top:10px">REPORTS & AUTO</div>
+        <a href="reports.html" class="nav-link"><span class="nav-ico">📊</span>Reports</a>
+        <a href="whatsapp-batch.html" class="nav-link"><span class="nav-ico">💬</span>WhatsApp Batch</a>
+
+        <div class="sb-sec-lbl" style="margin-top:10px">TEAM</div>
+        <a href="team.html" class="nav-link"><span class="nav-ico">👨‍👩‍👧</span>Team</a>
+        <a href="audit-log.html" class="nav-link"><span class="nav-ico">📋</span>Audit Log</a>
+
+        <div class="sb-sec-lbl" style="margin-top:10px">CUSTOMER PORTAL</div>
+        <a href="shop-requests.html" class="nav-link"><span class="nav-ico">🔔</span>Requests</a>
+        
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="settings.html" class="nav-link"><span class="nav-ico">⚙️</span>Settings</a>
+        <a href="contact.html" class="nav-link"><span class="nav-ico">💬</span>Contact Us</a>
+      </nav>
+
+      <div class="sb-footer">
+        <div class="upgrade-card">
+          <div class="upgrade-title">⚡ Upgrade to Pro</div>
+          <div class="upgrade-sub">Unlimited products & no ads</div>
+          <button class="upgrade-btn" onclick="location.href='subscription.html'">Rs. 999/month →</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ══ MAIN ══ -->
+    <div class="main-area">
+
+      <!-- TOPBAR -->
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div>
+            <div class="topbar-title" id="tb-greeting">Dashboard</div>
+            <div class="topbar-sub" id="tb-date"></div>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="icon-btn" title="Notifications">🔔<div class="notif-dot"></div></div>
+          <div class="user-pill" onclick="location.href='settings.html'">
+            <div class="user-av" id="user-av">U</div>
+            <div class="user-nm" id="user-nm">User</div>
+          </div>
+          <button class="logout-btn" onclick="signOut()">⏻ Logout</button>
+        </div>
+      </div>
+
+      <!-- PAGE CONTENT -->
+      <div class="page-content">
+        <!-- Ad Banner Slot -->
+        <div id="ad-banner-slot"></div>
+        <!-- Broadcast Messages -->
+        <div id="broadcast-msgs"></div>
+
+        <!-- SHOP CODE BANNER -->
+        <div id="shop-code-banner" style="display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,rgba(0,201,177,.10),rgba(0,158,142,.06));border:1px solid rgba(0,201,177,.25);border-radius:14px;padding:14px 18px;margin-bottom:16px;gap:12px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-size:22px">🏪</div>
+            <div>
+              <div style="font-size:11px;font-weight:700;color:rgba(232,240,247,.45);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Your Shop Code — Share with Customers</div>
+              <div style="font-family:monospace;font-size:26px;font-weight:800;color:#00C9B1;letter-spacing:4px" id="dashboard-shop-code">------</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button onclick="copyShopCode()" style="background:rgba(0,201,177,.15);border:1px solid rgba(0,201,177,.3);border-radius:8px;padding:8px 14px;color:#00C9B1;font-size:12px;font-weight:700;cursor:pointer">📋 Copy Code</button>
+            <button onclick="openInviteModal()" style="background:linear-gradient(135deg,#00C9B1,#009E8E);border:none;border-radius:8px;padding:8px 14px;color:#040D12;font-size:12px;font-weight:700;cursor:pointer">➕ Invite Customer</button>
+          </div>
+        </div>
+
+        <!-- PENDING LINK REQUESTS FROM CUSTOMERS -->
+        <div id="pending-links-panel" style="display:none;margin-bottom:16px"></div>
+
+        <!-- STAT CARDS -->
+        <div class="stats-grid" id="stats-grid">
+          <div class="stat-card green" onclick="location.href='bills.html'">
+            <div class="stat-arrow">→</div>
+            <div class="stat-icon">💚</div>
+            <div class="stat-value" id="s-sales">—</div>
+            <div class="stat-label">Today's Sales</div>
+            <div class="stat-sub" id="s-bills">— bills</div>
+          </div>
+          <div class="stat-card red" onclick="location.href='customers.html'">
+            <div class="stat-arrow">→</div>
+            <div class="stat-icon">🔴</div>
+            <div class="stat-value" id="s-udhaar">—</div>
+            <div class="stat-label">Pending Balance</div>
+            <div class="stat-sub" id="s-ucust">— customers</div>
+          </div>
+          <div class="stat-card blue" onclick="location.href='inventory.html'">
+            <div class="stat-arrow">→</div>
+            <div class="stat-icon">📦</div>
+            <div class="stat-value" id="s-stock">—</div>
+            <div class="stat-label">Total Stock Value</div>
+            <div class="stat-sub" id="s-prods">— products</div>
+          </div>
+          <div class="stat-card gold" onclick="location.href='reports.html'">
+            <div class="stat-arrow">→</div>
+            <div class="stat-icon">💛</div>
+            <div class="stat-value" id="s-profit">—</div>
+            <div class="stat-label">Today's Profit</div>
+            <div class="stat-sub" id="s-margin">— % margin</div>
+          </div>
+        </div>
+
+        <!-- QUICK ACTIONS -->
+        <div class="qa-strip">
+          <button class="qa-btn primary" onclick="location.href='pos.html'">➕ New Sale</button>
+          <button class="qa-btn" onclick="location.href='customers.html'">👤 Add Customer</button>
+          <button class="qa-btn" onclick="location.href='inventory-add.html'">📦 Add Product</button>
+          <button class="qa-btn" onclick="location.href='expenses.html'">💸 Expense</button>
+          <button class="qa-btn" onclick="location.href='reports.html'">📊 Reports</button>
+          <button class="qa-btn" onclick="location.href='bills.html'">🧾 Bills</button>
+        </div>
+
+        <!-- MAIN GRID -->
+        <div class="main-grid">
+          <!-- LEFT -->
+          <div>
+            <!-- Sales Chart -->
+            <div class="panel">
+              <div class="panel-header">
+                <div class="panel-title">📈 Today's Sales — Hourly</div>
+                <a href="reports.html" class="panel-action">Details →</a>
+              </div>
+              <div class="chart-wrap">
+                <svg id="sales-chart" viewBox="0 0 540 100" style="width:100%;height:auto;overflow:visible">
+                  <defs>
+                    <linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#00C9B1" stop-opacity="0.28"/>
+                      <stop offset="100%" stop-color="#00C9B1" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <line x1="0" y1="25" x2="540" y2="25" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+                  <line x1="0" y1="50" x2="540" y2="50" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+                  <line x1="0" y1="75" x2="540" y2="75" stroke="rgba(255,255,255,.04)" stroke-width="1"/>
+                  <path id="chart-area" fill="url(#cg)"/>
+                  <path id="chart-line" fill="none" stroke="#00C9B1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  <circle id="chart-dot" r="4.5" fill="#00C9B1"/>
+                  <circle id="chart-dot-halo" r="9" fill="rgba(0,201,177,.18)"/>
+                </svg>
+                <div class="chart-labels">
+                  <span>8am</span><span>10am</span><span>12pm</span><span>2pm</span><span>4pm</span><span>6pm</span><span>8pm</span><span>10pm</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Bills -->
+            <div class="panel">
+              <div class="panel-header">
+                <div class="panel-title">🧾 Today's Bills</div>
+                <a href="bills.html" class="panel-action">View All →</a>
+              </div>
+              <div id="txn-list">
+                <div class="txn-row" style="justify-content:center;padding:32px;color:rgba(232,240,247,.3)">⏳ Loading...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT -->
+          <div>
+            <!-- Health Score -->
+            <div class="panel">
+              <div class="panel-header"><div class="panel-title">Shop Health</div></div>
+              <div class="health-card">
+                <div class="health-ring">
+                  <svg viewBox="0 0 110 110" width="110" height="110">
+                    <circle cx="55" cy="55" r="46" fill="none" stroke="rgba(255,255,255,.05)" stroke-width="9"/>
+                    <circle id="health-arc" cx="55" cy="55" r="46" fill="none" stroke="#00C9B1" stroke-width="9" stroke-linecap="round" stroke-dasharray="289" stroke-dashoffset="289" transform="rotate(-90 55 55)" style="transition:stroke-dashoffset 1.2s ease"/>
+                  </svg>
+                  <div class="ring-text">
+                    <div class="ring-score" id="health-num">—</div>
+                    <div class="ring-label">/ 100</div>
+                  </div>
+                </div>
+                <div class="health-desc" id="health-desc">Loading...</div>
+              </div>
+            </div>
+
+            <!-- Top Pending Balances -->
+            <div class="panel">
+              <div class="panel-header">
+                <div class="panel-title">⚠ Top Pending</div>
+                <a href="customers.html" class="panel-action">All →</a>
+              </div>
+              <div id="udhaar-list">
+                <div style="text-align:center;padding:28px;color:rgba(232,240,247,.3);font-size:13px">⏳ Loading...</div>
+              </div>
+            </div>
+
+            <!-- Low Stock -->
+            <div class="panel" id="low-stock-panel" style="display:none">
+              <div class="panel-header">
+                <div class="panel-title">📉 Low Stock</div>
+                <a href="inventory.html?filter=low" class="panel-action">Inventory →</a>
+              </div>
+              <div id="low-stock-list"></div>
+            </div>
+
+            <!-- Monthly Sales Target (AI Gamification) -->
+            <div class="panel" id="target-panel">
+              <div class="panel-header"><div class="panel-title">🎯 Monthly Target</div><button id="edit-target-btn" onclick="openTargetEdit()" style="font-size:11px;background:rgba(255,255,255,0.04);border:none;color:rgba(232,240,247,0.5);padding:4px 10px;border-radius:6px;cursor:pointer">✏️ Edit</button></div>
+              <div id="target-body" style="padding:4px 0 8px">
+                <div style="text-align:center;color:rgba(232,240,247,.3);font-size:12px;padding:16px">⏳ Calculating...</div>
+              </div>
+              <div id="target-edit" style="display:none;padding:4px 0 8px">
+                <input type="number" id="target-input" placeholder="e.g. 500000" style="width:100%;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;padding:10px;color:#E8F0F7;font-size:14px;font-weight:700;font-family:var(--font-display);outline:none;box-sizing:border-box">
+                <button onclick="saveTarget()" style="margin-top:8px;width:100%;background:var(--primary);border:none;border-radius:8px;padding:10px;color:#040D12;font-weight:800;font-size:13px;cursor:pointer">Set Monthly Target</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE BOTTOM NAV -->
+  <nav class="mobile-nav">
+    <div class="mob-nav-inner">
+      <a href="dashboard.html" class="mob-nav-item active"><span class="mob-nav-icon">🏠</span>Home</a>
+      <a href="pos.html" class="mob-nav-item"><span class="mob-nav-icon">➕</span>Sale</a>
+      <a href="inventory.html" class="mob-nav-item"><span class="mob-nav-icon">📦</span>Inventory</a>
+      <a href="customers.html" class="mob-nav-item"><span class="mob-nav-icon">👥</span>Customers</a>
+      <a href="settings.html" class="mob-nav-item"><span class="mob-nav-icon">⚙️</span>More</a>
+    </div>
+  </nav>
+
+  <!-- TOAST -->
+  <div id="toast-container"></div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+
+  <script>
+    // ── Theme ──
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}})();
+
+    // ── Mobile sidebar ──
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+
+    // ── Date ──
+    document.getElementById('tb-date').textContent = new Date().toLocaleDateString('en-PK',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+    // ── Init sidebar from cache ──
+    function initFromCache(){
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');
+      const user=JSON.parse(localStorage.getItem('hr_user')||'{}');
+      if(shop.name)document.getElementById('sb-shop').textContent=shop.name;
+      if(shop.subscription)document.getElementById('sb-plan').textContent=(shop.subscription||'free').toUpperCase();
+      if(user.name){
+        document.getElementById('user-nm').textContent=user.name;
+        document.getElementById('user-av').textContent=(user.name[0]||'U').toUpperCase();
+        document.getElementById('tb-greeting').textContent='Welcome, '+user.name+'! 👋';
+      }
+    }
+    initFromCache();
+
+    // ── Chart ──
+    function drawChart(hourlyData){
+      if(!hourlyData||!hourlyData.length)return;
+      const w=540,h=100,pad=4;
+      const max=Math.max(...hourlyData,1);
+      const pts=hourlyData.map((v,i)=>{
+        const x=pad+(i/(hourlyData.length-1))*(w-pad*2);
+        const y=h-pad-((v/max)*(h-pad*2));
+        return[x,y];
+      });
+      const lineD=pts.map((p,i)=>(i===0?`M${p[0]},${p[1]}`:`L${p[0]},${p[1]}`)).join(' ');
+      const areaD=lineD+` L${pts[pts.length-1][0]},${h} L${pts[0][0]},${h} Z`;
+      document.getElementById('chart-line').setAttribute('d',lineD);
+      document.getElementById('chart-area').setAttribute('d',areaD);
+      const maxIdx=hourlyData.indexOf(max);
+      const maxPt=pts[maxIdx];
+      document.getElementById('chart-dot').setAttribute('cx',maxPt[0]);
+      document.getElementById('chart-dot').setAttribute('cy',maxPt[1]);
+      document.getElementById('chart-dot-halo').setAttribute('cx',maxPt[0]);
+      document.getElementById('chart-dot-halo').setAttribute('cy',maxPt[1]);
+    }
+
+    // ── Udhaar list ──
+    function renderUdhaarList(customers){
+      const el=document.getElementById('udhaar-list');
+      if(!customers||!customers.length){el.innerHTML='<div style="text-align:center;padding:28px;color:rgba(232,240,247,.3);font-size:13px">✓ No pending balances</div>';return;}
+      el.innerHTML=customers.map(c=>`
+        <div class="ulist-row" onclick="location.href='customer-detail.html?id=${c.id}'">
+          <div class="u-av">${(c.name||'?')[0].toUpperCase()}</div>
+          <div class="u-info"><div class="u-name">${c.name}</div><div class="u-phone">${c.phone||''}</div></div>
+          <div class="u-bal">${fmtCur(c.balance)}</div>
+          <button class="wa-btn" title="WhatsApp" onclick="event.stopPropagation();sendWA('${c.phone}','${c.name}',${c.balance})">📱</button>
+        </div>`).join('');
+    }
+
+    // ── WhatsApp ──
+    function sendWA(phone,name,balance){
+      const num=(phone||'').replace(/^0/,'92').replace(/\D/g,'');
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');
+      const msg=`Assalam o Alaikum ${name},\n\n${shop.name||'Our shop'} has a pending balance of Rs. ${(balance||0).toLocaleString()} on your account.\n\nPlease clear it at your earliest convenience.\n\nThank you! 🙏`;
+      window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank');
+    }
+
+    // ── Bills ──
+    function renderTxns(sales){
+      const el=document.getElementById('txn-list');
+      if(!sales||!sales.length){el.innerHTML='<div style="text-align:center;padding:32px;color:rgba(232,240,247,.3)"><div style="font-size:32px;margin-bottom:8px">🧾</div>No bills today — create a sale from POS</div>';return;}
+      el.innerHTML=sales.slice(0,5).map(s=>{
+        const isUdhaar=s.paymentType==='udhaar';
+        const amt=s.totalAmount||s.total||0;
+        const ts=s.createdAt?.toDate?s.createdAt.toDate():new Date(s.createdAt||Date.now());
+        const time=ts.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'});
+        return`<div class="txn-row" onclick="location.href='bill-detail.html?id=${s.id}'">
+          <div class="txn-ico" style="background:${isUdhaar?'rgba(245,166,35,.1)':'rgba(16,185,129,.1)'}">${isUdhaar?'📝':'🛒'}</div>
+          <div class="txn-info"><div class="txn-name">${s.customerName||'Walk-in'}${isUdhaar?' <span class="badge badge-gold" style="font-size:9px">Credit</span>':''}</div><div class="txn-meta">${s.billNumber||'—'} · ${time}</div></div>
+          <div class="txn-amt" style="color:${isUdhaar?'#F87171':'#34D399'}">${isUdhaar?'':'+'}${fmtCur(amt)}</div></div>`;
+      }).join('');
+    }
+
+    // ── Low Stock ──
+    function renderLowStock(products){
+      const panel=document.getElementById('low-stock-panel');
+      const list=document.getElementById('low-stock-list');
+      if(!products||!products.length){panel.style.display='none';return;}
+      panel.style.display='block';
+      list.innerHTML=products.map(p=>{
+        const isOut=!p.stock||p.stock===0;
+        return`<div class="stock-row"><div class="stock-name">${p.name}</div><span class="badge ${isOut?'badge-red':'badge-gold'}">${isOut?'Out':'Low: '+p.stock+' '+(p.unit||'')}</span></div>`;
+      }).join('');
+    }
+
+    // ── Health Score UI Setter ──
+    function setHealthScore(score){
+      const circle=document.getElementById('health-arc');
+      const num=document.getElementById('health-num');
+      const offset=289-(score/100*289);
+      circle.style.strokeDashoffset=offset;
+      circle.style.stroke=score>=80?'#00C9B1':score>=40?'#F5A623':'#EF4444';
+      num.textContent=score;
+      num.style.color=score>=80?'#00C9B1':score>=40?'#F5A623':'#F87171';
+    }
+
+    // ── Broadcast Messages ──
+    async function loadBroadcastMessages(){
+      try{
+        const snap=await db.collection('broadcast_messages').where('active','==',true).orderBy('createdAt','desc').limit(3).get();
+        const container=document.getElementById('broadcast-msgs');
+        if(snap.empty){container.style.display='none';return;}
+        const plan=(JSON.parse(localStorage.getItem('hr_shop')||'{}')).subscription||'free';
+        container.innerHTML=snap.docs.map(doc=>{
+          const m=doc.data();
+          if(m.target!=='all'&&m.target!==plan)return'';
+          const emojis={info:'ℹ️',warning:'⚠️',success:'✅',danger:'🚨'};
+          const colors={info:'59,130,246',warning:'245,158,11',success:'16,185,129',danger:'239,68,68'};
+          const c=colors[m.type]||colors.info;
+          return`<div style="background:rgba(${c},.08);border:1px solid rgba(${c},.2);border-radius:12px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start">
+            <span style="font-size:18px;flex-shrink:0">${emojis[m.type]||'ℹ️'}</span>
+            <div><div style="font-size:13px;font-weight:700">${m.title}</div><div style="font-size:12px;color:rgba(232,240,247,.5);margin-top:2px">${m.body}</div></div>
+            <button onclick="this.closest('div[style]').remove()" style="margin-left:auto;background:none;border:none;color:rgba(232,240,247,.3);cursor:pointer;font-size:16px">✕</button></div>`;
+        }).join('');
+      }catch(e){console.warn('Broadcast load failed:',e)}
+    }
+
+    // ── LOAD DASHBOARD DATA ──
+    async function loadDashboard(){
+      const user=auth.currentUser;
+      if(!user){location.href='login.html';return;}
+      const shopId=getShopId();
+      if(!shopId){location.href='setup.html';return;}
+
+      // Update user info
+      try{
+        const userDoc=await db.collection('users').doc(user.uid).get();
+        if(userDoc.exists){
+          const u=userDoc.data();
+          localStorage.setItem('hr_user',JSON.stringify(u));
+          document.getElementById('user-nm').textContent=u.name||'User';
+          document.getElementById('user-av').textContent=(u.name||'U')[0].toUpperCase();
+          document.getElementById('tb-greeting').textContent='Welcome, '+(u.name||'User')+'! 👋';
+        }
+      }catch(e){console.warn('User load:',e.message)}
+
+      // Load data
+      try{
+        const today=new Date();today.setHours(0,0,0,0);
+        const todayTs=firebase.firestore.Timestamp.fromDate(today);
+
+        const [salesSnap, custsSnap, prodsSnap] = await Promise.all([
+          db.collection('sales').where('shopId','==',shopId).get(),
+          db.collection('customers').where('shopId','==',shopId).get(),
+          db.collection('products').where('shopId','==',shopId).get()
+        ]);
+
+        let allSales = salesSnap.docs.map(d=>({id:d.id,...d.data()}));
+        let allCusts = custsSnap.docs.map(d=>({id:d.id,...d.data()}));
+        let allProds = prodsSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+        const todaySecs = Math.floor(todayTs.toMillis() / 1000);
+        
+        const sales = allSales.filter(s => s.deleted !== true && (s.createdAt?.seconds||0) >= todaySecs)
+                              .sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+        
+        const udhaars = allCusts.filter(c => c.deleted !== true && (c.balance || 0) > 0)
+                                .sort((a,b)=>(b.balance||0)-(a.balance||0)).slice(0,5);
+        
+        const lowStock = allProds.filter(p => p.deleted !== true && p.lowStock === true).slice(0,6);
+        const products = allProds.filter(p => p.deleted !== true);
+
+        // Stats
+        const todaySales=sales.reduce((s,d)=>s+(d.totalAmount||d.total||0),0);
+        const todayProfit=sales.reduce((s,d)=>s+(d.profit||0),0);
+        const totalUdhaar=udhaars.reduce((s,c)=>s+(c.balance||0),0);
+        const stockValue=products.reduce((s,p)=>s+((p.purchasePrice||0)*(p.stock||0)),0);
+        const margin=todaySales?Math.round(todayProfit/todaySales*100):0;
+
+        document.getElementById('s-sales').textContent=fmtCur(todaySales);
+        document.getElementById('s-bills').textContent=sales.length+' bills';
+        document.getElementById('s-udhaar').textContent=fmtCur(totalUdhaar);
+        document.getElementById('s-ucust').textContent=udhaars.length+' customers';
+        document.getElementById('s-stock').textContent=fmtCur(stockValue);
+        document.getElementById('s-prods').textContent=products.length+' products';
+        document.getElementById('s-profit').textContent=fmtCur(todayProfit);
+        document.getElementById('s-margin').textContent=margin+'% margin';
+
+        // Chart — build hourly data
+        const hourly=new Array(14).fill(0);
+        sales.forEach(s=>{
+          const ts=s.createdAt?.toDate?s.createdAt.toDate():new Date(s.createdAt||Date.now());
+          const hr=ts.getHours()-8;
+          if(hr>=0&&hr<14)hourly[hr]+=(s.totalAmount||s.total||0);
+        });
+        drawChart(hourly);
+
+        // Lists
+        renderTxns(sales);
+        renderUdhaarList(udhaars);
+        renderLowStock(lowStock);
+
+        // --- AI Health Score Engine ---
+        let hScore = 100;
+        let deductions = [];
+        
+        let udhaarRatio = totalUdhaar / Math.max(todaySales || stockValue || 1, 1);
+        let uPen = Math.min(25, Math.round(udhaarRatio * 30));
+        if(uPen > 0) { hScore -= uPen; deductions.push(`-${uPen} (High Credit Ratio)`); }
+        
+        let lowPen = Math.min(15, lowStock.length * 2);
+        if(lowPen > 0) { hScore -= lowPen; deductions.push(`-${lowPen} (${lowStock.length} Low Stock)`); }
+
+        try {
+           const d = new Date(); d.setDate(d.getDate() - 30);
+           const rItems = await db.collection('sale_items').where('shopId', '==', shopId).where('createdAt', '>=', firebase.firestore.Timestamp.fromDate(d)).get();
+           let sMap = {};
+           rItems.forEach(doc => {
+               const data = doc.data();
+               if(data.productId && data.productId !== 'custom') sMap[data.productId] = (sMap[data.productId] || 0) + (data.qty || 1);
+           });
+           let predOut = 0;
+           allProds.forEach(p => {
+              let vel = (sMap[p.id] || 0) / 30;
+              let daysL = vel > 0 ? (p.stock || 0) / vel : 999;
+              if(daysL <= 7 && (p.stock||0) > 0) predOut++;
+           });
+           let pPen = Math.min(30, predOut * 5);
+           if(pPen > 0) { hScore -= pPen; deductions.push(`-${pPen} (AI: ${predOut} items reach 0 soon)`); }
+        } catch(e) { console.warn('AI Stock Pen failed'); }
+
+        try {
+           let hrUdhaar = 0;
+           let cSales = {};
+           const d60 = 60*24*60*60*1000;
+           const now = Date.now();
+           
+           sales.forEach(s => {
+               if(s.customerId && (s.paymentType==='udhaar' || s.paymentType==='mixed')) {
+                   if(!cSales[s.customerId]) cSales[s.customerId] = [];
+                   cSales[s.customerId].push(s);
+               }
+           });
+           
+           udhaars.forEach(c => {
+              let bLeft = c.balance || 0;
+              let mSales = cSales[c.id] || [];
+              for(let s of mSales) {
+                  if(bLeft <= 0) break;
+                  let amt = s.creditAmount || (s.totalAmount - (s.cashReceived||0));
+                  if(amt > 0) {
+                      let attach = Math.min(amt, bLeft);
+                      bLeft -= attach;
+                      let age = now - (s.createdAt?.seconds ? s.createdAt.seconds*1000 : now);
+                      if(age > d60) hrUdhaar += attach;
+                  }
+              }
+              if(bLeft > 0) hrUdhaar += bLeft; 
+           });
+           
+           if(hrUdhaar > 0) {
+              let aRatio = hrUdhaar / Math.max(totalUdhaar, 1);
+              let agePen = Math.min(30, Math.round(aRatio * 35));
+              if(agePen > 0) { hScore -= agePen; deductions.push(`-${agePen} (AI: Rs. ${fmtCur(hrUdhaar)} >60d aged)`); }
+           }
+        } catch(e) { console.warn('AI Credit Pen failed'); }
+        
+        hScore = Math.max(0, hScore);
+        setHealthScore(hScore);
+        
+        const descEl = document.getElementById('health-desc');
+        if(deductions.length > 0) {
+           descEl.innerHTML = `<div style="text-align:left;font-size:11px;color:rgba(232,240,247,.6);line-height:1.4">${deductions.join('<div style="margin-top:2px"></div>')}</div>`;
+        } else {
+           descEl.innerHTML = `<span style="color:#10B981;font-weight:600">Optimal Health ✨</span>`;
+        }
+
+        // Broadcast messages
+        await loadBroadcastMessages();
+
+      }catch(e){
+        console.error('Dashboard load error:',e);
+        toast('Failed to load data. Working offline.','warning');
+      }
+    }
+
+    // ── Monthly Target (AI Gamification) ──
+    function openTargetEdit() {
+      const body = document.getElementById('target-body');
+      const edit = document.getElementById('target-edit');
+      const saved = localStorage.getItem('hr_monthly_target');
+      document.getElementById('target-input').value = saved || '';
+      body.style.display = 'none';
+      edit.style.display = 'block';
+    }
+    
+    function saveTarget() {
+      const val = parseFloat(document.getElementById('target-input').value) || 0;
+      if (val <= 0) { toast('Please enter a valid target amount.', 'warning'); return; }
+      localStorage.setItem('hr_monthly_target', val);
+      document.getElementById('target-edit').style.display = 'none';
+      document.getElementById('target-body').style.display = 'block';
+      renderTarget(val);
+      toast('Monthly target saved!', 'success');
+    }
+    
+    async function renderTarget(target) {
+      const body = document.getElementById('target-body');
+      if (!target) {
+        body.innerHTML = `<div style="text-align:center;padding:12px;font-size:12px;color:rgba(232,240,247,.4)">No target set. Click ✏️ to set a monthly sales goal.</div>`;
+        return;
+      }
+      
+      const now = new Date();
+      const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+      const daysSoFar = now.getDate();
+      const daysLeft = daysInMonth - daysSoFar;
+      
+      try {
+        const snap = await db.collection('sales')
+          .where('shopId','==', getShopId())
+          .where('deleted','==', false)
+          .where('createdAt','>=', firebase.firestore.Timestamp.fromDate(firstOfMonth))
+          .get();
+        
+        let monthTotal = 0;
+        snap.forEach(d => { const s = d.data(); monthTotal += (s.totalAmount || s.total || 0); });
+        
+        const pct = Math.min(100, Math.round((monthTotal / target) * 100));
+        const projected = daysSoFar > 0 ? (monthTotal / daysSoFar) * daysInMonth : 0;
+        const gap = target - monthTotal;
+        const dailyNeeded = daysLeft > 0 ? gap / daysLeft : 0;
+        const onTrack = projected >= target;
+        
+        const barColor = pct >= 100 ? '#10B981' : pct >= 65 ? '#F59E0B' : '#EF4444';
+        const statusIcon = onTrack ? '✅' : '⚠️';
+        const statusText = onTrack
+          ? `On track! Projected: ${fmtCur(projected)}`
+          : `Need ${fmtCur(dailyNeeded)}/day to hit target`;
+        
+        body.innerHTML = `
+          <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px;font-weight:700;color:${barColor}">${pct}%</span>
+            <span style="font-size:11px;color:rgba(232,240,247,.5)">${fmtCur(monthTotal)} / ${fmtCur(target)}</span>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;margin-bottom:10px">
+            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:3px;transition:width 0.8s ease"></div>
+          </div>
+          <div style="font-size:11px;color:rgba(232,240,247,.6)">${statusIcon} ${statusText}</div>
+          <div style="font-size:10px;color:rgba(232,240,247,.3);margin-top:4px">${daysSoFar} days elapsed · ${daysLeft} days remaining</div>
+        `;
+      } catch(e) {
+        body.innerHTML = `<div style="font-size:11px;color:rgba(232,240,247,.3);text-align:center;padding:12px">Could not load monthly data.</div>`;
+      }
+    }
+
+    // ── Auth Check ──
+    auth.onAuthStateChanged(user=>{
+      if(!user){location.href='login.html';return;}
+      // Email verification is optional — do NOT block login
+      loadDashboard().then(() => {
+        const saved = parseFloat(localStorage.getItem('hr_monthly_target')) || 0;
+        renderTarget(saved);
+        loadShopCode();
+        loadPendingLinkRequests();
+      });
+    });
+
+    // ── Shop Code: load + display ──
+    async function loadShopCode(){
+      try{
+        // First try localStorage
+        const cached = JSON.parse(localStorage.getItem('hr_shop') || '{}');
+        if(cached.shopCode){
+          document.getElementById('dashboard-shop-code').textContent = cached.shopCode;
+          return;
+        }
+        // Fallback: fetch from Firestore
+        const u = JSON.parse(localStorage.getItem('hr_user') || '{}');
+        if(!u.shopId) return;
+        const snap = await db.collection('shops').doc(u.shopId).get();
+        if(snap.exists && snap.data().shopCode){
+          const code = snap.data().shopCode;
+          document.getElementById('dashboard-shop-code').textContent = code;
+          // Cache it
+          const shop = { ...cached, shopCode: code };
+          localStorage.setItem('hr_shop', JSON.stringify(shop));
+        }
+      } catch(e){ console.warn('shopCode:', e); }
+    }
+
+    function copyShopCode(){
+      const code = document.getElementById('dashboard-shop-code').textContent;
+      if(!code || code === '------') return;
+      navigator.clipboard.writeText(code).then(()=>{
+        toast('✅ Shop Code copied! Share it with your customers.', 'success');
+      }).catch(()=>{
+        prompt('Copy this Shop Code:', code);
+      });
+    }
+
+    // ── Invite Customer by Phone ──
+    function openInviteModal(){
+      // Create modal if not exists
+      if(!document.getElementById('invite-modal')){
+        const m = document.createElement('div');
+        m.id = 'invite-modal';
+        m.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+        m.innerHTML = `
+          <div style="background:#0D1E2E;border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px;width:100%;max-width:380px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+              <div style="font-weight:700;font-size:16px">📨 Invite Customer</div>
+              <button onclick="document.getElementById('invite-modal').remove()" style="background:none;border:none;color:rgba(232,240,247,.4);font-size:20px;cursor:pointer">✕</button>
+            </div>
+            <p style="font-size:13px;color:rgba(232,240,247,.5);line-height:1.6;margin-bottom:16px">Enter the customer's phone number. They will be linked to your shop and can view their bills on the customer portal.</p>
+            <label style="font-size:11px;font-weight:700;color:rgba(232,240,247,.35);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Customer Phone</label>
+            <div style="position:relative;margin-bottom:12px">
+              <span style="position:absolute;left:13px;top:50%;transform:translateY(-50%)">📱</span>
+              <input id="invite-phone-in" type="tel" placeholder="03XXXXXXXXX" style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#E8F0F7;font-size:14px;padding:11px 14px 11px 40px;outline:none;font-family:inherit" oninput="this.style.borderColor='rgba(255,255,255,.08)'">
+            </div>
+            <button id="btn-invite-send" onclick="sendInviteByPhone()" style="width:100%;padding:12px;background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer">📨 Send Invite Link</button>
+          </div>`;
+        document.body.appendChild(m);
+        m.addEventListener('click', e => { if(e.target===m) m.remove(); });
+      }
+      setTimeout(()=>document.getElementById('invite-phone-in')?.focus(), 50);
+    }
+
+    async function sendInviteByPhone(){
+      const phone = document.getElementById('invite-phone-in').value.trim();
+      if(!phone){ document.getElementById('invite-phone-in').style.borderColor='#EF4444'; return; }
+      const btn = document.getElementById('btn-invite-send');
+      btn.disabled=true; btn.textContent='Sending...';
+      try{
+        const u = JSON.parse(localStorage.getItem('hr_user') || '{}');
+        const shop = JSON.parse(localStorage.getItem('hr_shop') || '{}');
+        if(!u.shopId) throw new Error('Shop not found.');
+
+        // Try to find the customer in Firestore users by phone
+        const userSnap = await db.collection('users').where('phone','==',phone).where('role','==','customer').limit(1).get();
+        
+        if(!userSnap.empty){
+          const custUid = userSnap.docs[0].id;
+          // Check if already linked
+          const exist = await db.collection('customer_shop_links').where('customerId','==',custUid).where('shopId','==',u.shopId).get();
+          if(!exist.empty){ toast('This customer is already linked to your shop.','error'); btn.disabled=false; btn.textContent='📨 Send Invite Link'; return; }
+          // Auto-link them
+          await db.collection('customer_shop_links').add({
+            customerId: custUid,
+            shopId:     u.shopId,
+            shopName:   shop.name || 'Your Shop',
+            status:     'active',
+            invitedByOwner: true,
+            createdAt:  firebase.firestore.FieldValue.serverTimestamp()
+          });
+          toast('✅ Customer linked! They will see your shop when they login.','success');
+        } else {
+          // Customer not registered — save a pending invite (they can claim it on signup)
+          await db.collection('shop_requests').add({
+            shopId:      u.shopId,
+            shopName:    shop.name || 'Your Shop',
+            shopCode:    shop.shopCode || '',
+            invitePhone: phone,
+            status:      'pending',
+            createdAt:   firebase.firestore.FieldValue.serverTimestamp()
+          });
+          toast('📨 Invite saved! When ' + phone + ' registers, they will be linked automatically.','success');
+        }
+        document.getElementById('invite-modal')?.remove();
+      } catch(e){
+        toast(e.message, 'error');
+        btn.disabled=false; btn.textContent='📨 Send Invite Link';
+      }
+    }
+
+    // ── Shopkeeper: Load Pending Link Requests from Customers ──
+    async function loadPendingLinkRequests(){
+      try {
+        const u = JSON.parse(localStorage.getItem('hr_user')||'{}');
+        if(!u.shopId) return;
+
+        const snap = await db.collection('customer_shop_links')
+          .where('shopId','==',u.shopId)
+          .where('status','==','pending_shop_approval').get();
+
+        const panel = document.getElementById('pending-links-panel');
+        if(snap.empty){ panel.style.display='none'; return; }
+
+        panel.style.display='block';
+        panel.innerHTML = snap.docs.map(doc => {
+          const d = doc.data();
+          return `
+            <div style="background:rgba(0,201,177,.07);border:1px solid rgba(0,201,177,.22);border-radius:14px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#00C9B1,#009E8E);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#040D12;flex-shrink:0">${(d.customerName||'?')[0].toUpperCase()}</div>
+                <div>
+                  <div style="font-weight:700;font-size:13px">${d.customerName||'Unknown Customer'} wants to link</div>
+                  <div style="font-size:11px;color:var(--tx-muted);margin-top:2px">${d.customerPhone||d.customerEmail||''}</div>
+                </div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button onclick="respondToLinkRequest('${doc.id}','active')" style="background:linear-gradient(135deg,#00C9B1,#009E8E);border:none;border-radius:8px;padding:8px 16px;color:#040D12;font-size:12px;font-weight:700;cursor:pointer">✅ Accept</button>
+                <button onclick="respondToLinkRequest('${doc.id}','denied')" style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:8px 14px;color:#F87171;font-size:12px;font-weight:700;cursor:pointer">✕ Deny</button>
+              </div>
+            </div>`;
+        }).join('');
+
+      } catch(e){ console.warn('Pending links:', e); }
+    }
+
+    async function respondToLinkRequest(linkId, newStatus){
+      try {
+        if(newStatus === 'denied'){
+          await db.collection('customer_shop_links').doc(linkId).delete();
+          toast('🚫 Request denied.', 'info');
+        } else {
+          await db.collection('customer_shop_links').doc(linkId).update({ status: 'active' });
+          toast('✅ Customer linked successfully!', 'success');
+        }
+        loadPendingLinkRequests();
+      } catch(e){ toast(e.message,'error'); }
+    }
+  </script>
+</body>
+</html>

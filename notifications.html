@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Notifications — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    .notif-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      transition: border-color 0.2s;
+    }
+    .notif-card:hover { border-color: rgba(255,255,255,0.1); }
+    body.light-mode .notif-card:hover { border-color: rgba(0,0,0,0.1); }
+    
+    .notif-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .notif-icon.urgent { background: rgba(239,68,68,0.1); color: #EF4444; }
+    .notif-icon.warning { background: rgba(245,158,11,0.1); color: #F59E0B; }
+    .notif-icon.info { background: rgba(59,130,246,0.1); color: #3B82F6; }
+    .notif-icon.ai { background: rgba(139,92,246,0.1); color: #A78BFA; }
+    
+    .notif-content { flex: 1; }
+    .notif-title { font-size: 15px; font-weight: 700; margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
+    .notif-time { font-size: 11px; color: var(--tx-muted); font-weight: 600; padding-left: 10px; }
+    .notif-body { font-size: 13px; color: rgba(232,240,247,0.7); line-height: 1.5; }
+    body.light-mode .notif-body { color: rgba(4,13,18,0.7); }
+    
+    .notif-action { margin-top: 10px; }
+    .notif-btn {
+      background: rgba(255,255,255,0.05); border: none; padding: 6px 12px;
+      border-radius: 6px; color: var(--tx-muted); font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: background 0.2s; text-decoration: none; display: inline-block;
+    }
+    .notif-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    body.light-mode .notif-btn { background: rgba(0,0,0,0.05); }
+    body.light-mode .notif-btn:hover { background: rgba(0,0,0,0.1); color: #000; }
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+  <div style="display:flex;min-height:100vh">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand"><div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div>
+        <div class="sb-shop-chip"><div class="sb-shop-av">🛒</div><div><div class="sb-shop-name" id="sb-shop">Shop</div><div class="sb-shop-plan">FREE</div></div></div></div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a>
+        <a href="pos.html" class="nav-link"><span class="nav-ico">💳</span>New Sale</a>
+        <a href="inventory.html" class="nav-link"><span class="nav-ico">📦</span>Inventory</a>
+        <a href="customers.html" class="nav-link"><span class="nav-ico">👥</span>Customers</a>
+        <a href="suppliers.html" class="nav-link"><span class="nav-ico">🚚</span>Suppliers</a>
+        <a href="bills.html" class="nav-link"><span class="nav-ico">🧾</span>Bills</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">FINANCE</div>
+        <a href="expenses.html" class="nav-link"><span class="nav-ico">💸</span>Expenses</a>
+        <a href="daily-cash.html" class="nav-link"><span class="nav-ico">💰</span>Daily Cash</a>
+        <a href="returns.html" class="nav-link"><span class="nav-ico">↩</span>Returns</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">SYSTEM</div>
+        <a href="notifications.html" class="nav-link active"><span class="nav-ico">🔔</span>Notifications</a>
+        <a href="shop-requests.html" class="nav-link" style="margin-left:14px;font-size:12px;opacity:0.8"><span class="nav-ico" style="font-size:14px">↳</span>Client Hub</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="settings.html" class="nav-link"><span class="nav-ico">⚙️</span>Settings</a>
+      </nav>
+    </aside>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div class="topbar-title">🔔 Notifications</div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="user-pill" onclick="location.href='settings.html'"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div>
+          <button class="logout-btn" onclick="signOut()">⏻ Logout</button>
+        </div>
+      </div>
+
+      <div class="page-content" style="max-width:800px;margin:0 auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+           <h2 style="font-size:20px;font-weight:800">System Alerts <span id="alert-count" style="font-size:12px;background:var(--primary);color:#040D12;padding:2px 8px;border-radius:10px;margin-left:8px">0</span></h2>
+           <button class="notif-btn" onclick="loadNotifications()">🔄 Refresh</button>
+        </div>
+
+        <div id="notif-list">
+           <div style="text-align:center;padding:50px;color:rgba(232,240,247,.3);font-size:14px">
+             ⏳ Scanning system...
+           </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="mobile-nav"><div class="mob-nav-inner">
+    <a href="dashboard.html" class="mob-nav-item"><span class="mob-nav-icon">🏠</span>Home</a>
+    <a href="pos.html" class="mob-nav-item"><span class="mob-nav-icon">➕</span>Sale</a>
+    <a href="inventory.html" class="mob-nav-item"><span class="mob-nav-icon">📦</span>Inventory</a>
+    <a href="notifications.html" class="mob-nav-item active"><span class="mob-nav-icon">🔔</span>Alerts</a>
+    <a href="settings.html" class="mob-nav-item"><span class="mob-nav-icon">⚙️</span>More</a>
+  </div></nav>
+  
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');const user=JSON.parse(localStorage.getItem('hr_user')||'{}');
+      if(shop.name)document.getElementById('sb-shop').textContent=shop.name;
+      if(user.name){document.getElementById('user-nm').textContent=user.name;document.getElementById('user-av').textContent=(user.name[0]||'U').toUpperCase()}
+    })();
+
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+
+    async function loadNotifications() {
+      const shopId = getShopId();
+      if(!shopId) return;
+      
+      const list = document.getElementById('notif-list');
+      list.innerHTML = `<div style="text-align:center;padding:50px;color:rgba(232,240,247,.3)">⏳ Synthesizing alerts...</div>`;
+      
+      let alerts = [];
+
+      try {
+        // 1. Fetch actionable Customer Requests
+        const reqSnap = await db.collection('shop_requests').where('shopId','==',shopId).where('status','==','pending').get();
+        reqSnap.forEach(doc => {
+           const d = doc.data();
+           alerts.push({
+             type: 'warning', icon: '👤', title: 'New Customer Request',
+             body: `${d.customerName} wants action on their account! Type: ${d.type}. Please review it in the Client Hub.`,
+             time: d.createdAt ? d.createdAt.toDate() : new Date(),
+             action: 'Review Request', link: 'shop-requests.html'
+           });
+        });
+
+        // 2. Fetch AI Predictive Stock Runouts
+        const prods = await DataService.getProducts();
+        const d30 = new Date(); d30.setDate(d30.getDate() - 30);
+        const rItems = await db.collection('sale_items').where('shopId','==',shopId).where('createdAt','>=',firebase.firestore.Timestamp.fromDate(d30)).get();
+        let sMap = {};
+        let emptyCount = 0;
+        let critCount = 0;
+        
+        rItems.forEach(doc => {
+            const data = doc.data();
+            if(data.productId && data.productId !== 'custom') sMap[data.productId] = (sMap[data.productId]||0) + (data.qty||1);
+        });
+        
+        let stockWarnings = [];
+        prods.forEach(p => {
+           if(p.stock === 0) emptyCount++;
+           else {
+               let vel = (sMap[p.id]||0) / 30;
+               let daysLeft = vel > 0 ? p.stock / vel : 999;
+               if(daysLeft <= 3) {
+                  critCount++;
+                  stockWarnings.push(`<b>${p.name}</b> (${Math.round(daysLeft)} days left)`);
+               }
+           }
+        });
+        
+        if(emptyCount > 0) {
+           alerts.push({ type: 'urgent', icon: '🔴', title: 'Items Out of Stock', body: `You have ${emptyCount} products entirely out of stock. You are losing sales!`, time: new Date(), action: 'Buy Inventory', link: 'inventory.html' });
+        }
+        if(critCount > 0) {
+           alerts.push({ type: 'ai', icon: '✨', title: 'AI Predictive Restock Alert', body: `Intelligence Engine warns that ${critCount} products will run out within 72 hours:<br><br>${stockWarnings.slice(0,3).join('<br>')}${critCount>3?'<br>and more...':''}`, time: new Date(), action: 'View Predictions', link: 'inventory.html?filter=insight' });
+        }
+
+        // 3. Smart Credit Alert
+        let hrUdhaar = 0;
+        const custsSnap = await db.collection('customers').where('shopId','==',shopId).where('deleted','==',false).get();
+        const udhaars = custsSnap.docs.map(d=>({id:d.id, ...d.data()})).filter(c=>c.balance>0);
+        
+        if(udhaars.length > 0) {
+            const salesSnap = await db.collection('sales').where('shopId','==',shopId).where('deleted','==',false).get();
+            const now = Date.now(); const d60 = 60*24*60*60*1000;
+            let cSales = {};
+            salesSnap.forEach(sDoc => {
+               const s = sDoc.data();
+               if(s.customerId && (s.paymentType==='udhaar'||s.paymentType==='mixed')) {
+                   if(!cSales[s.customerId]) cSales[s.customerId]=[];
+                   cSales[s.customerId].push(s);
+               }
+            });
+            
+            udhaars.forEach(c => {
+              let bLeft = c.balance || 0;
+              let mSales = cSales[c.id] || [];
+              mSales.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+              for(let s of mSales) {
+                  if(bLeft <= 0) break;
+                  let amt = s.creditAmount || (s.totalAmount - (s.cashReceived||0));
+                  if(amt > 0) {
+                      let attach = Math.min(amt, bLeft);
+                      bLeft -= attach;
+                      let age = now - (s.createdAt?.seconds ? s.createdAt.seconds*1000 : now);
+                      if(age > d60) hrUdhaar += attach;
+                  }
+              }
+              if(bLeft > 0) hrUdhaar += bLeft; 
+            });
+            
+            if(hrUdhaar > 0) {
+              alerts.push({ type: 'urgent', icon: '💸', title: 'Severe Credit Risk Detected', body: `You have Rs. ${hrUdhaar.toLocaleString()} of Udhaar that is over 60 days old. The AI strongly recommends contacting these customers immediately.`, time: new Date(), action: 'View Customers', link: 'customers.html' });
+            }
+        }
+        
+        // Render
+        alerts.sort((a,b)=>b.time - a.time);
+        document.getElementById('alert-count').textContent = alerts.length;
+        
+        if(alerts.length === 0) {
+           list.innerHTML = `<div style="text-align:center;padding:50px;color:rgba(232,240,247,.4)"><div style="font-size:32px;margin-bottom:12px">🎉</div>All clear! No pending system alerts.</div>`;
+        } else {
+           list.innerHTML = alerts.map(a => `
+             <div class="notif-card">
+                <div class="notif-icon ${a.type}">${a.icon}</div>
+                <div class="notif-content">
+                   <div class="notif-title">${a.title} <span class="notif-time">${timeAgo(a.time)}</span></div>
+                   <div class="notif-body">${a.body}</div>
+                   ${a.action ? `<div class="notif-action"><a href="${a.link}" class="notif-btn">${a.action} →</a></div>` : ''}
+                </div>
+             </div>
+           `).join('');
+        }
+
+      } catch(e) {
+         console.error('Alert gen error', e);
+         list.innerHTML = `<div style="text-align:center;padding:30px;color:#EF4444">Failed to synthesize alerts.</div>`;
+      }
+    }
+
+    function timeAgo(date) {
+      const seconds = Math.floor((new Date() - date) / 1000);
+      if(seconds < 60) return 'Just now';
+      const m = Math.floor(seconds/60); if(m < 60) return m + 'm ago';
+      const h = Math.floor(m/60); if(h < 24) return h + 'hq ago';
+      const d = Math.floor(h/24); return d + 'd ago';
+    }
+
+    auth.onAuthStateChanged(user => {
+      if(!user) { location.href='login.html'; return; }
+      ensureShopId(user).then(() => loadNotifications());
+    });
+  </script>
+</body>
+</html>

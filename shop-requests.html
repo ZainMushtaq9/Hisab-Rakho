@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Customer Requests — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    .page-content{padding:20px;max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:20px;min-height:calc(100vh - 56px)}
+    
+    .tabs{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px}
+    .tabs::-webkit-scrollbar{display:none}
+    .tab-btn{padding:10px 18px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;color:var(--tx-muted);font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;display:flex;align-items:center;gap:6px}
+    body.light-mode .tab-btn{background:#fff;border-color:rgba(0,0,0,.08)}
+    .tab-btn.active{background:rgba(0,201,177,.1);border-color:#00C9B1;color:#00C9B1}
+    .t-badge{background:rgba(255,255,255,.1);padding:2px 8px;border-radius:10px;font-size:10px;color:#fff}
+    .tab-btn.active .t-badge{background:#00C9B1;color:#000}
+    body.light-mode .t-badge{background:var(--bg-dark);color:#fff}
+    
+    .tab-pane{display:none}
+    .tab-pane.active{display:block}
+    
+    .req-list{display:flex;flex-direction:column;gap:16px}
+    
+    /* Request Card */
+    .r-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative}
+    body.light-mode .r-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    
+    .rc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+    .rc-title{font-family:var(--font-display);font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px}
+    .rc-sub{font-size:11px;color:var(--tx-muted);margin-top:2px}
+    .rc-amt{font-family:var(--font-display);font-size:20px;font-weight:800;color:#00C9B1}
+    
+    .rc-body{background:rgba(0,0,0,.2);border-radius:10px;padding:12px;font-size:13px;color:rgba(232,240,247,.7);margin-bottom:16px}
+    body.light-mode .rc-body{background:#F8FAFC;color:rgba(13,30,46,.7)}
+    
+    .rc-foot{display:flex;gap:12px;justify-content:flex-end}
+    .btn-act{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid transparent;transition:all .2s}
+    .b-acc{background:rgba(16,185,129,.1);color:#10B981;border-color:rgba(16,185,129,.2)}
+    .b-acc:hover{background:#10B981;color:#fff}
+    .b-rej{background:rgba(239,68,68,.1);color:#EF4444;border-color:rgba(239,68,68,.2)}
+    .b-rej:hover{background:#EF4444;color:#fff}
+    
+    .empty-state{text-align:center;padding:60px 20px;background:var(--bg-card);border:1px dashed var(--border);border-radius:16px}
+    body.light-mode .empty-state{background:#fff;border-color:rgba(0,0,0,.1)}
+    
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
+      .menu-toggle{display:flex}.main-area{margin-left:0}
+      .rc-foot{flex-direction:column}
+      .rc-foot button{width:100%}
+    }
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <div style="display:flex;min-height:100vh">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div>
+        <div class="sb-shop-chip"><div class="sb-shop-av">🛒</div><div><div class="sb-shop-name" id="sb-shop">Shop</div><div class="sb-shop-plan">PRO</div></div></div>
+      </div>
+      <nav class="sb-nav">
+        <!-- Will be populated via JS or just hardcoded standard layout minus Whatsapp Batch -->
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a>
+        <a href="pos.html" class="nav-link"><span class="nav-ico">💳</span>New Sale / POS</a>
+        <a href="inventory.html" class="nav-link"><span class="nav-ico">📦</span>Inventory</a>
+        <a href="customers.html" class="nav-link"><span class="nav-ico">👥</span>Customers</a>
+        <a href="bills.html" class="nav-link"><span class="nav-ico">🧾</span>Bills</a>
+        
+        <div class="sb-sec-lbl" style="margin-top:10px">REPORTS & AUTO</div>
+        <a href="reports.html" class="nav-link"><span class="nav-ico">📊</span>Reports</a>
+        <a href="whatsapp-batch.html" class="nav-link"><span class="nav-ico">💬</span>WhatsApp Batch</a>
+        
+        <div class="sb-sec-lbl" style="margin-top:10px">CUSTOMER PORTAL</div>
+        <a href="shop-requests.html" class="nav-link active"><span class="nav-ico">🔔</span>Requests</a>
+        <a href="settings.html" class="nav-link"><span class="nav-ico">⚙️</span>Settings</a>
+      </nav>
+    </aside>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div class="topbar-title">🔔 Customer Requests</div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="user-pill"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div>
+          <button class="logout-btn" onclick="signOut()">⏻ Logout</button>
+        </div>
+      </div>
+
+      <div class="page-content">
+        
+        <div class="tabs">
+          <button class="tab-btn active" onclick="switchTab('links')">🔗 Requests <span class="t-badge" id="b-links">0</span></button>
+          <button class="tab-btn" onclick="switchTab('connected')">👥 Connected <span class="t-badge" id="b-connected">0</span></button>
+          <button class="tab-btn" onclick="switchTab('orders')">📦 Orders <span class="t-badge" id="b-orders">0</span></button>
+          <button class="tab-btn" onclick="switchTab('payments')">💳 Payments <span class="t-badge" id="b-payments">0</span></button>
+          <button class="tab-btn" onclick="switchTab('deletes')">🚫 Removals <span class="t-badge" id="b-deletes">0</span></button>
+        </div>
+        
+        <div class="tab-pane active" id="tab-links">
+           <div class="req-list" id="list-links"><div style="text-align:center;padding:40px;opacity:.5">Loading...</div></div>
+        </div>
+        
+        <div class="tab-pane" id="tab-connected">
+           <div class="req-list" id="list-connected"><div style="text-align:center;padding:40px;opacity:.5">Loading...</div></div>
+        </div>
+        
+        <div class="tab-pane" id="tab-orders">
+           <div class="req-list" id="list-orders"><div style="text-align:center;padding:40px;opacity:.5">Loading...</div></div>
+        </div>
+        
+        <div class="tab-pane" id="tab-payments">
+           <div class="req-list" id="list-payments"><div style="text-align:center;padding:40px;opacity:.5">Loading...</div></div>
+        </div>
+        
+        <div class="tab-pane" id="tab-deletes">
+           <div class="req-list" id="list-deletes"><div style="text-align:center;padding:40px;opacity:.5">Loading...</div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}})();
+    let shopId = null;
+
+    function switchTab(t){
+       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+       event.currentTarget.classList.add('active');
+       document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+       document.getElementById('tab-'+t).classList.add('active');
+    }
+
+    async function initPage(){
+       const shopRaw = localStorage.getItem('hr_shop');
+       if(!shopRaw) return location.href='login.html';
+       const s = JSON.parse(shopRaw);
+       shopId = s.shopId;
+       document.getElementById('sb-shop').textContent = s.name;
+       
+       loadLinks();
+       loadConnected();
+       loadOrders();
+       loadPayments();
+       loadDeletes();
+    }
+
+    async function loadLinks(){
+       try {
+          const snap = await db.collection('customer_shop_links')
+            .where('shopId','==',shopId)
+            .where('status','==','pending_shop_approval').get();
+            
+          document.getElementById('b-links').textContent = snap.size;
+          
+          if(snap.empty){
+             document.getElementById('list-links').innerHTML = `<div class="empty-state">No pending link requests.</div>`;
+             return;
+          }
+          
+          document.getElementById('list-links').innerHTML = snap.docs.map(doc => {
+             const d = doc.data();
+             const dt = d.createdAt?.toDate ? formatDateTime(d.createdAt.toDate()) : 'Now';
+             return `
+             <div class="r-card" id="l-${doc.id}">
+               <div class="rc-head">
+                 <div>
+                   <div class="rc-title">👤 ${d.customerName || 'Unknown'}</div>
+                   <div class="rc-sub">${d.customerPhone || d.customerEmail || ''} • ${dt}</div>
+                 </div>
+               </div>
+               <div class="rc-body">This customer wants to link their Customer Portal account to your shop.</div>
+               <div class="rc-foot">
+                 <button class="btn-act b-rej" onclick="handleLinkReq('${doc.id}', 'denied')">Deny</button>
+                 <button class="btn-act b-acc" onclick="handleLinkReq('${doc.id}', 'approved', '${d.customerPhone||''}', '${d.customerName||''}')">Approve Link</button>
+               </div>
+             </div>`;
+          }).join('');
+       } catch(e) { console.error('loadLinks error:', e); }
+    }
+
+    async function loadConnected(){
+       try {
+          const snap = await db.collection('customer_shop_links')
+            .where('shopId','==',shopId)
+            .where('status','==','active').get();
+            
+          document.getElementById('b-connected').textContent = snap.size;
+          
+          if(snap.empty){
+             document.getElementById('list-connected').innerHTML = `<div class="empty-state">No connected customers yet.</div>`;
+             return;
+          }
+          
+          document.getElementById('list-connected').innerHTML = snap.docs.map(doc => {
+             const d = doc.data();
+             const dt = d.createdAt?.toDate ? formatDateTime(d.createdAt.toDate()) : '—';
+             return `
+             <div class="r-card" id="c-${doc.id}">
+               <div class="rc-head">
+                 <div>
+                   <div class="rc-title">👥 ${d.customerName || 'Unknown'}</div>
+                   <div class="rc-sub">${d.customerPhone || d.customerEmail || ''} • Linked: ${dt}</div>
+                 </div>
+               </div>
+               <div class="rc-body">This customer is connected to your shop. They can view their balances and bills online.</div>
+               <div class="rc-foot">
+                 <button class="btn-act b-rej" onclick="handleUnlink('${doc.id}')">Disconnect Customer</button>
+               </div>
+             </div>`;
+          }).join('');
+       } catch(e) { console.error('loadConnected error:', e); }
+    }
+
+    async function handleUnlink(linkId){
+       if(!confirm('Are you sure you want to disconnect this customer? They will lose online access to their bills from your shop.')) return;
+       try {
+          await db.collection('customer_shop_links').doc(linkId).delete();
+          toast('Customer disconnected.', 'success');
+          document.getElementById('c-'+linkId).style.display='none';
+          loadConnected();
+       } catch(e) { toast('Error disconnecting', 'error'); }
+    }
+
+    async function loadOrders(){
+       try {
+          const res = await db.collection('shops').doc(shopId).collection('orders').where('status','==','pending').get();
+          document.getElementById('b-orders').textContent = res.size;
+          const map = res.docs.map(d=>({id:d.id, ...d.data()}));
+          
+          if(!map.length){
+             document.getElementById('list-orders').innerHTML = `<div class="empty-state">No pending orders.</div>`;
+             return;
+          }
+          
+          document.getElementById('list-orders').innerHTML = map.map(o => {
+             const dt = o.createdAt?.toDate ? formatDateTime(o.createdAt.toDate()) : 'Now';
+             const itemsHtml = o.items.map(i => `${i.qty}x ${i.name} (@ ${fmtCur(i.price)})`).join('<br>');
+             return `
+             <div class="r-card" id="o-${o.id}">
+               <div class="rc-head">
+                 <div>
+                   <div class="rc-title">👤 ${o.customerName}</div>
+                   <div class="rc-sub">Order ID: ${o.id.substring(0,6)} • ${dt}</div>
+                 </div>
+                 <div class="rc-amt">${fmtCur(o.total)}</div>
+               </div>
+               <div class="rc-body"><b>Items Requested:</b><br>${itemsHtml}</div>
+               <div class="rc-foot">
+                 <button class="btn-act b-rej" onclick="handleOrder('${o.id}', 'rejected')">Reject Order</button>
+                 <button class="btn-act b-acc" onclick="handleOrder('${o.id}', 'approved')">Accept & Convert to Bill</button>
+               </div>
+             </div>`;
+          }).join('');
+       }catch(e){console.error(e)}
+    }
+    
+    async function loadPayments(){
+       try {
+          const res = await db.collection('shops').doc(shopId).collection('payment_proofs').where('status','==','pending').get();
+          document.getElementById('b-payments').textContent = res.size;
+          const map = res.docs.map(d=>({id:d.id, ...d.data()}));
+          
+          if(!map.length){
+             document.getElementById('list-payments').innerHTML = `<div class="empty-state">No pending payment proofs.</div>`;
+             return;
+          }
+           
+          // We need internal customer names for UX.
+          for(let p of map) {
+             try{
+                const cDoc = await db.collection('shops').doc(shopId).collection('customers').doc(p.customerId).get();
+                p.cName = cDoc.exists ? cDoc.data().name : 'Unknown Customer';
+             }catch(e){ p.cName='Unknown'; }
+          }
+          
+          document.getElementById('list-payments').innerHTML = map.map(p => {
+             const dt = p.createdAt?.toDate ? formatDateTime(p.createdAt.toDate()) : 'Now';
+             return `
+             <div class="r-card" id="p-${p.id}">
+               <div class="rc-head">
+                 <div>
+                   <div class="rc-title">👤 ${p.cName}</div>
+                   <div class="rc-sub">For Bill #: ${p.billId.substring(0,8)} • ${dt}</div>
+                 </div>
+                 <div class="rc-amt">${fmtCur(p.amount)}</div>
+               </div>
+               <div class="rc-body"><b>Reference Note:</b><br>${p.note}</div>
+               <div class="rc-foot">
+                 <button class="btn-act b-rej" onclick="handlePayment('${p.id}', 'rejected', '${p.billId}', ${p.amount}, '${p.customerId}')">Reject Proof</button>
+                 <button class="btn-act b-acc" onclick="handlePayment('${p.id}', 'approved', '${p.billId}', ${p.amount}, '${p.customerId}')">Verify & Apply Cash</button>
+               </div>
+             </div>`;
+          }).join('');
+       }catch(e){console.error(e)}
+    }
+
+    async function loadDeletes(){
+       try {
+          const res = await db.collection('customer_delete_requests').where('shopId','==',shopId).where('status','==','pending').get();
+          document.getElementById('b-deletes').textContent = res.size;
+          const map = res.docs.map(d=>({id:d.id, ...d.data()}));
+          
+          if(!map.length){
+             document.getElementById('list-deletes').innerHTML = `<div class="empty-state">No removal requests pending.</div>`;
+             return;
+          }
+          
+          for(let d of map){
+             try{
+                const uDoc = await db.collection('users').doc(d.customerId).get();
+                d.cName = uDoc.exists ? uDoc.data().name : 'Unknown User';
+             }catch(e){ d.cName='Unknown';}
+          }
+          
+          document.getElementById('list-deletes').innerHTML = map.map(d => {
+             const dt = d.createdAt?.toDate ? formatDateTime(d.createdAt.toDate()) : 'Now';
+             return `
+             <div class="r-card" id="d-${d.id}">
+               <div class="rc-head">
+                 <div>
+                   <div class="rc-title" style="color:#EF4444">🚫 Removal Request</div>
+                   <div class="rc-sub">${d.cName} • ${dt}</div>
+                 </div>
+               </div>
+               <div class="rc-body">This customer wishes to unlink your shop from their Customer Portal account. Doing this will remove their ability to see bills online, but your local records will survive.</div>
+               <div class="rc-foot">
+                 <button class="btn-act b-rej" onclick="handleDeleteReq('${d.id}', 'rejected', '${d.customerId}')">Reject & Keep Link</button>
+                 <button class="btn-act b-acc" onclick="handleDeleteReq('${d.id}', 'approved', '${d.customerId}')">Approve Unlink</button>
+               </div>
+             </div>`;
+          }).join('');
+       }catch(e){console.error(e)}
+    }
+
+    // Handlers
+    async function handleLinkReq(linkId, status, reqCustomerPhone, reqCustomerName){
+       if(!confirm(`Are you sure you want to ${status === 'approved' ? 'approve' : 'deny'} this link request?`)) return;
+       try {
+          if (status === 'denied') {
+             await db.collection('customer_shop_links').doc(linkId).delete();
+             toast('Request denied.', 'info');
+          } else {
+             let shopCustId = null;
+             if(reqCustomerPhone){
+                const exist = await db.collection('customers').where('shopId','==',shopId).where('deleted','==',false).where('phone','==',reqCustomerPhone).limit(1).get();
+                if(!exist.empty) shopCustId = exist.docs[0].id;
+             }
+             if(!shopCustId){
+                const newDoc = await db.collection('customers').add({
+                   shopId: shopId, name: reqCustomerName || 'Linked Customer', phone: reqCustomerPhone || '', balance: 0, deleted: false, createdAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                shopCustId = newDoc.id;
+             }
+             
+             await db.collection('customer_shop_links').doc(linkId).update({ 
+                status: 'active',
+                shopCustomerId: shopCustId
+             });
+             toast('Customer linked successfully!', 'success');
+          }
+          document.getElementById('l-'+linkId).style.display='none';
+          loadLinks();
+       } catch(e) { toast('Error updating link request', 'error'); console.error(e); }
+    }
+
+    async function handleOrder(orderId, status){
+       if(!confirm(`Are you sure you want to ${status} this order?`)) return;
+       try {
+          await db.collection('shops').doc(shopId).collection('orders').doc(orderId).update({status: status});
+          document.getElementById('o-'+orderId).style.display='none';
+          
+          if(status === 'approved'){
+             // Create a bill!
+             const oDoc = await db.collection('shops').doc(shopId).collection('orders').doc(orderId).get();
+             const o = oDoc.data();
+             
+             await db.collection('shops').doc(shopId).collection('bills').add({
+                customerId: o.shopCustomerId,
+                customerName: o.customerName,
+                items: o.items,
+                total: o.total,
+                profit: 0, // Quick bypass since order doesn't have cost price easily mapped
+                discount: 0,
+                cashReceived: 0,
+                paymentMethod: 'credit', // Usually unpaid
+                note: 'Online Order ' + orderId.substring(0,4),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+             });
+             toast('Order converted to Bill successfully!', 'success');
+          } else {
+             toast('Order rejected.', 'info');
+          }
+          loadOrders();
+       }catch(e){toast('Error processing order','error');}
+    }
+
+    async function handlePayment(proofId, status, billId, amount, customerId){
+       if(!confirm(`Are you sure you want to ${status} this payment proof?`)) return;
+       try {
+          const batch = db.batch();
+          
+          batch.update(db.collection('shops').doc(shopId).collection('payment_proofs').doc(proofId), {status});
+          
+          if(status === 'approved'){
+             // Update Bill cashReceived
+             const bRef = db.collection('shops').doc(shopId).collection('bills').doc(billId);
+             const bDoc = await bRef.get();
+             if(bDoc.exists){
+                const currentCash = bDoc.data().cashReceived || 0;
+                batch.update(bRef, {cashReceived: currentCash + amount});
+             }
+             
+             // Update customer balance
+             const cRef = db.collection('shops').doc(shopId).collection('customers').doc(customerId);
+             const cDoc = await cRef.get();
+             if(cDoc.exists){
+                const currentBal = cDoc.data().balance || 0;
+                batch.update(cRef, {balance: currentBal - amount});
+             }
+             
+             // Log as income/cash
+             batch.set(db.collection('shops').doc(shopId).collection('daily_cash').doc(), {
+                type: 'in',
+                amount: amount,
+                source: 'Portal Payment Verify',
+                date: firebase.firestore.FieldValue.serverTimestamp(),
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+             });
+          }
+          await batch.commit();
+          toast('Payment proof handled.', 'success');
+          document.getElementById('p-'+proofId).style.display='none';
+          loadPayments();
+       }catch(e){toast('Error updating payment','error');}
+    }
+
+    async function handleDeleteReq(reqId, status, customerId){
+       if(!confirm(`Are you sure you want to ${status} this removal request?`)) return;
+       try {
+          const batch = db.batch();
+          batch.update(db.collection('customer_delete_requests').doc(reqId), {status});
+          
+          if(status === 'approved'){
+             // Find link and delete it or set inactive
+             const links = await db.collection('customer_shop_links').where('customerId','==',customerId).where('shopId','==',shopId).get();
+             links.forEach(l => {
+                batch.update(l.ref, {status: 'inactive'});
+             });
+          }
+          
+          await batch.commit();
+          toast('Removal request processed.', 'success');
+          document.getElementById('d-'+reqId).style.display='none';
+          loadDeletes();
+       }catch(e){toast('Error updating request','error');console.error(e)}
+    }
+
+
+    // Sidebar & Auth
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+    function signOut(){firebase.auth().signOut().then(()=>location.href='login.html')}
+    firebase.auth().onAuthStateChanged(user=>{
+      if(!user) location.href='login.html';
+      else {
+         const localU = localStorage.getItem('hr_user');
+         if(localU){
+            const parsed = JSON.parse(localU);
+            
+            document.getElementById('user-nm').textContent = parsed.name || user.email.split('@')[0];
+            document.getElementById('user-av').textContent = (parsed.name || user.email)[0].toUpperCase();
+         }
+         initPage();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Suppliers — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#040D12">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    /* ── SUPPLIER SPECIFIC STYLES ── */
+    .sup-list{display:flex;flex-direction:column;gap:8px}
+    .sup-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s}
+    body.light-mode .sup-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    .sup-card:hover{border-color:var(--border-teal);transform:translateY(-1px)}
+    .sc-av{width:42px;height:42px;border-radius:50%;background:rgba(245,166,35,.1);color:#F5A623;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
+    .sc-info{flex:1;min-width:0}
+    .sc-name{font-size:14px;font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .sc-meta{font-size:11px;color:rgba(232,240,247,.35);margin-top:1px}
+    .sc-actions{display:flex;gap:6px}
+    .sc-act{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all .15s}
+    .sc-act.edit{background:rgba(59,130,246,.1);color:#93C5FD}
+    .sc-act.del{background:rgba(239,68,68,.08);color:#F87171}
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+  <div style="display:flex;min-height:100vh">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand"><div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div><div class="sb-shop-chip"><div class="sb-shop-av">🛒</div><div><div class="sb-shop-name" id="sb-shop">Shop</div><div class="sb-shop-plan">FREE</div></div></div></div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a><a href="pos.html" class="nav-link"><span class="nav-ico">💳</span>New Sale</a><a href="inventory.html" class="nav-link"><span class="nav-ico">📦</span>Inventory</a><a href="customers.html" class="nav-link"><span class="nav-ico">👥</span>Customers</a><a href="suppliers.html" class="nav-link active"><span class="nav-ico">🚚</span>Suppliers</a><a href="bills.html" class="nav-link"><span class="nav-ico">🧾</span>Bills</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">FINANCE</div>
+        <a href="expenses.html" class="nav-link"><span class="nav-ico">💸</span>Expenses</a><a href="daily-cash.html" class="nav-link"><span class="nav-ico">💰</span>Daily Cash</a><a href="returns.html" class="nav-link"><span class="nav-ico">↩</span>Returns</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">CUSTOMER PORTAL</div>
+        <a href="shop-requests.html" class="nav-link"><span class="nav-ico">🔔</span>Requests</a>
+        
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="settings.html" class="nav-link"><span class="nav-ico">⚙️</span>Settings</a>
+      </nav>
+      <div class="sb-footer"><div class="upgrade-card"><div class="upgrade-title">⚡ Upgrade</div><div class="upgrade-sub">Unlimited features</div><button class="upgrade-btn" onclick="location.href='subscription.html'">Rs. 999/mo →</button></div></div>
+    </aside>
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button class="menu-toggle" onclick="openSidebar()">☰</button><div class="topbar-title">🚚 Suppliers</div></div>
+        <div class="topbar-right"><div class="icon-btn" onclick="toggleTheme()"><span class="theme-toggle-btn">🌙</span></div><div class="user-pill"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div><button class="logout-btn" onclick="signOut()">⏻ Logout</button></div>
+      </div>
+      <div class="page-content">
+        <div class="toolbar"><div class="toolbar-search"><span class="ts-icon">🔍</span><input type="text" id="search" placeholder="Search suppliers..." oninput="filterSuppliers()"></div><button class="toolbar-btn primary" onclick="openModal()">➕ Add Supplier</button></div>
+        <div class="sup-list" id="sup-list"><div class="empty-state"><div class="es-icon">⏳</div>Loading...</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-title"><span id="modal-title-text">➕ Add Supplier</span><span class="modal-close" onclick="closeModal()">✕</span></div>
+      <div class="form-error" id="modal-err"></div>
+      <input type="hidden" id="edit-id">
+      <div class="grid-2" style="margin-bottom:16px;align-items:start">
+        <div class="fg" style="margin-bottom:0"><label class="fl">Supplier Name *</label><input class="fi" id="m-name" placeholder="Company or person name"></div>
+        <div class="fg" style="margin-bottom:0"><label class="fl">Phone</label><input class="fi" id="m-phone" type="tel" placeholder="Phone number"></div>
+        <div class="fg" style="margin-bottom:0"><label class="fl">Company</label><input class="fi" id="m-company" placeholder="Company name"></div>
+        <div class="fg" style="margin-bottom:0"><label class="fl">Products Supplied</label><input class="fi" id="m-products" placeholder="e.g. Beverages, Snacks"></div>
+        <div class="fg" style="margin-bottom:0;grid-column:1/-1"><label class="fl">Notes</label><input class="fi" id="m-notes" placeholder="Notes (optional)"></div>
+      </div>
+      <button class="btn-main" id="modal-btn" onclick="saveSupplier()">Save Supplier →</button>
+    </div>
+  </div>
+  <nav class="mobile-nav"><div class="mob-nav-inner"><a href="dashboard.html" class="mob-nav-item"><span class="mob-nav-icon">🏠</span>Home</a><a href="pos.html" class="mob-nav-item"><span class="mob-nav-icon">➕</span>Sale</a><a href="inventory.html" class="mob-nav-item"><span class="mob-nav-icon">📦</span>Inventory</a><a href="customers.html" class="mob-nav-item"><span class="mob-nav-icon">👥</span>Customers</a><a href="settings.html" class="mob-nav-item"><span class="mob-nav-icon">⚙️</span>More</a></div></nav>
+  <div id="toast-container"></div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');const user=JSON.parse(localStorage.getItem('hr_user')||'{}');
+      if(shop.name)document.getElementById('sb-shop').textContent=shop.name;
+      if(user.name){document.getElementById('user-nm').textContent=user.name;document.getElementById('user-av').textContent=(user.name[0]||'U').toUpperCase()}
+    })();
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+    let allSuppliers=[];
+    async function loadSuppliers(){
+      const shopId=getShopId();if(!shopId)return;
+      try{
+        allSuppliers = await DataService.getSuppliers();
+        renderSuppliers(allSuppliers);
+      }catch(e){console.error(e);toast('Load error','error')}
+    }
+    function filterSuppliers(){const q=(document.getElementById('search').value||'').toLowerCase().trim();renderSuppliers(q?allSuppliers.filter(s=>(s.name||'').toLowerCase().includes(q)||(s.company||'').toLowerCase().includes(q)):allSuppliers)}
+    function renderSuppliers(sups){
+      const el=document.getElementById('sup-list');
+      if(!sups.length){el.innerHTML='<div class="empty-state"><div class="es-icon">🚚</div>No suppliers yet<br><button onclick="openModal()" style="color:#00C9B1;font-weight:600;background:none;border:none;cursor:pointer;font-size:14px;margin-top:8px">Add your first supplier →</button></div>';return}
+      el.innerHTML=sups.map(s=>`<div class="sup-card">
+        <div class="sc-av">${(s.name||'?')[0].toUpperCase()}</div>
+        <div class="sc-info"><div class="sc-name">${s.name}</div><div class="sc-meta">${s.company||''} · ${s.phone||'No phone'}</div></div>
+        <div class="sc-actions"><div class="sc-act edit" onclick="editSupplier('${s.id}')">✏️</div><div class="sc-act del" onclick="delSupplier('${s.id}','${s.name.replace(/'/g, "\\'")}')">🗑</div></div></div>`).join('');
+    }
+    function openModal(id){
+      document.getElementById('modal').classList.add('open');document.getElementById('modal-err').style.display='none';
+      if(id){const s=allSuppliers.find(x=>x.id===id);if(s){document.getElementById('modal-title-text').textContent='✏️ Edit Supplier';document.getElementById('modal-btn').textContent='Update →';document.getElementById('edit-id').value=id;document.getElementById('m-name').value=s.name||'';document.getElementById('m-phone').value=s.phone||'';document.getElementById('m-company').value=s.company||'';document.getElementById('m-products').value=s.products||'';document.getElementById('m-notes').value=s.notes||'';return}}
+      document.getElementById('modal-title-text').textContent='➕ Add Supplier';document.getElementById('modal-btn').textContent='Save Supplier →';document.getElementById('edit-id').value='';['m-name','m-phone','m-company','m-products','m-notes'].forEach(i=>document.getElementById(i).value='');
+    }
+    function editSupplier(id){openModal(id)}
+    function closeModal(){document.getElementById('modal').classList.remove('open')}
+    async function saveSupplier(){
+      const name=document.getElementById('m-name').value.trim();const err=document.getElementById('modal-err');err.style.display='none';
+      if(!name){err.textContent='Name is required';err.style.display='block';return}
+      const btn=document.getElementById('modal-btn');btn.disabled=true;const editId=document.getElementById('edit-id').value;
+      const data={name,phone:document.getElementById('m-phone').value.trim(),company:document.getElementById('m-company').value.trim(),products:document.getElementById('m-products').value.trim(),notes:document.getElementById('m-notes').value.trim()};
+      try{
+        if(editId) { data.id = editId; }
+        await DataService.saveSupplier(data);
+        toast(editId ? 'Updated' : 'Supplier added!', 'success');
+        closeModal();loadSuppliers();
+      }catch(e){err.textContent=e.message;err.style.display='block'}
+      finally{btn.disabled=false}
+    }
+    async function delSupplier(id,name){if(!confirm(`Delete "${name}"?`))return;try{await DataService.deleteSupplier(id);toast('Deleted','success');loadSuppliers()}catch(e){toast('Error: '+e.message,'error')}}
+    auth.onAuthStateChanged(u=>{if(!u){location.href='login.html';return}loadSuppliers()});
+  </script>
+</body>
+</html>

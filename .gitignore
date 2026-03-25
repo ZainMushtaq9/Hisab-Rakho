@@ -1,0 +1,8 @@
+node_modules/
+.env
+.DS_Store
+not for use/
+*.zip
+*.docx
+*.pdf
+firebase-applet-config.json

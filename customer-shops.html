@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>My Shops — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    .page-content{padding:20px;max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:20px;min-height:calc(100vh - 56px)}
+    
+    .shop-card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:16px}
+    body.light-mode .shop-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    
+    .sc-head{display:flex;justify-content:space-between;align-items:flex-start}
+    .sc-info{display:flex;gap:12px;align-items:center}
+    .sc-icon{width:48px;height:48px;border-radius:12px;background:rgba(0,201,177,.1);color:#00C9B1;display:flex;align-items:center;justify-content:center;font-size:24px}
+    .sc-name{font-family:var(--font-display);font-size:18px;font-weight:700}
+    .sc-id{font-size:11px;color:var(--tx-muted);font-family:monospace;margin-top:2px}
+    
+    .sc-status{font-size:10px;padding:4px 10px;border-radius:12px;font-weight:700;text-transform:uppercase}
+    .st-active{background:rgba(16,185,129,.1);color:#10B981}
+    .st-pending{background:rgba(245,158,11,.1);color:#F59E0B}
+    
+    .sc-body{background:rgba(0,0,0,.15);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px}
+    body.light-mode .sc-body{background:#F8FAFC}
+    
+    .setting-row{display:flex;justify-content:space-between;align-items:center}
+    .sr-info{display:flex;flex-direction:column;gap:2px}
+    .sr-title{font-size:13px;font-weight:600}
+    .sr-sub{font-size:11px;color:var(--tx-muted)}
+    
+    /* Toggle Switch */
+    .toggle-switch{position:relative;width:40px;height:22px;background:var(--bg-dark);border-radius:20px;cursor:pointer;transition:background .3s}
+    body.light-mode .toggle-switch{background:#CBD5E1}
+    .toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;background:#fff;border-radius:50%;transition:transform .3s,box-shadow .3s;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+    .toggle-switch.on{background:#00C9B1}
+    .toggle-switch.on::after{transform:translateX(18px)}
+    
+    .btn-danger{padding:8px 14px;background:rgba(239,68,68,.1);color:#EF4444;border:1px solid rgba(239,68,68,.2);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+    .btn-danger:hover{background:#EF4444;color:#fff}
+    
+    .empty-state{text-align:center;padding:60px 20px;background:var(--bg-card);border:1px dashed var(--border);border-radius:16px}
+    body.light-mode .empty-state{background:#fff;border-color:rgba(0,0,0,.1)}
+    
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
+      .menu-toggle{display:flex}.main-area{margin-left:0}
+    }
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'owner') location.href='dashboard.html';</script>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <div style="display:flex;min-height:100vh">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div>
+        <div class="sb-shop-chip"><div class="sb-shop-av">👤</div><div><div class="sb-shop-name">Customer Portal</div><div class="sb-shop-plan shoppl">Active</div></div></div>
+      </div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="customer-dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a>
+        <a href="customer-shops.html" class="nav-link active"><span class="nav-ico">🏪</span>My Shops</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="#" class="nav-link"><span class="nav-ico">⚙️</span>Profile & Privacy</a>
+      </nav>
+      <div class="sb-footer">
+        <div class="upgrade-card"><div class="upgrade-title">Secure Hub</div><div class="upgrade-sub">Customer Edition</div></div>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div class="topbar-title">🏪 My Connected Shops</div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="user-pill"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div>
+          <button class="logout-btn" onclick="signOut()">⏻ Logout</button>
+        </div>
+      </div>
+
+      <div class="page-content" id="shops-list">
+        <div style="text-align:center;padding:40px;opacity:.5">Loading shops...</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}})();
+    let currentUser = null;
+    let myShops = [];
+    let privSettings = {};
+    let deleteRequests = {};
+
+    async function initPage(){
+       try {
+          const listEl = document.getElementById('shops-list');
+          
+          // 1. Fetch links
+          const linksSnap = await db.collection('customer_shop_links').where('customerId', '==', currentUser.uid).get();
+          
+          if(linksSnap.empty){
+             listEl.innerHTML = `
+               <div class="empty-state">
+                  <div style="font-size:40px;margin-bottom:16px;opacity:.5">🏬</div>
+                  <div style="color:var(--tx-muted);font-size:14px;margin-bottom:16px">You haven't linked any shops yet.</div>
+                  <button class="btn-main" onclick="location.href='customer-dashboard.html'" style="padding:10px 20px;background:#00C9B1;border-radius:8px;color:#000;font-weight:700;border:none;cursor:pointer">Go to Dashboard</button>
+               </div>
+             `;
+             return;
+          }
+
+          // 2. Fetch Privacy Settings
+          const setSnap = await db.collection('customer_privacy_settings').doc(currentUser.uid).get();
+          if(setSnap.exists) privSettings = setSnap.data();
+
+          // 3. Fetch Delete Requests
+          const delSnap = await db.collection('customer_delete_requests').where('customerId', '==', currentUser.uid).get();
+          delSnap.forEach(d => { deleteRequests[d.data().shopId] = d.data().status; });
+
+          // 4. Resolve Shop Names
+          let html = '';
+          for(let linkDoc of linksSnap.docs){
+             const link = { id: linkDoc.id, ...linkDoc.data() };
+             if(link.status !== 'active') continue; // Hide removed links
+             
+             let shopName = 'Unknown Shop';
+             try {
+                const sDoc = await db.collection('shops').doc(link.shopId).get();
+                if(sDoc.exists) shopName = sDoc.data().name;
+             } catch(e){}
+             
+             const hideBal = privSettings[link.shopId]?.hideBalance || false;
+             const delStatus = deleteRequests[link.shopId]; // pending, rejected
+             
+             const isPendingDel = delStatus === 'pending';
+             
+             html += `
+             <div class="shop-card">
+               <div class="sc-head">
+                 <div class="sc-info">
+                   <div class="sc-icon">🏪</div>
+                   <div>
+                     <div class="sc-name">${shopName}</div>
+                     <div class="sc-id">ID: ${link.shopId}</div>
+                   </div>
+                 </div>
+                 <div class="sc-status ${isPendingDel?'st-pending':'st-active'}">
+                    ${isPendingDel ? 'Removal Requested' : 'Active'}
+                 </div>
+               </div>
+               
+               <div class="sc-body">
+                 <div class="setting-row">
+                   <div class="sr-info">
+                     <div class="sr-title">Hide Balance from My Device</div>
+                     <div class="sr-sub">Conceals total amounts on your screen. Shopkeeper still sees full data.</div>
+                   </div>
+                   <div class="toggle-switch ${hideBal?'on':''}" onclick="togglePrivacy('${link.shopId}', '${link.shopCustomerId}', this)"></div>
+                 </div>
+                 
+                 <div style="width:100%;height:1px;background:var(--border);margin:4px 0"></div>
+                 
+                 <div class="setting-row">
+                   <div class="sr-info">
+                     <div class="sr-title" style="color:#EF4444">Remove Access</div>
+                     <div class="sr-sub">Request the shopkeeper to delete your link. Data remains until approved.</div>
+                   </div>
+                   <button class="btn-danger" ${isPendingDel?'disabled style="opacity:.5"':''} onclick="requestDelete('${link.shopId}')">
+                      ${isPendingDel ? 'Requested' : 'Request Removal'}
+                   </button>
+                 </div>
+               </div>
+             </div>
+             `;
+          }
+          
+          listEl.innerHTML = html;
+          
+       } catch(e) {
+          console.error('[customer-shops] Error:', e);
+          const listEl = document.getElementById('shops-list');
+          listEl.innerHTML = `
+            <div style="text-align:center;padding:40px;color:rgba(232,240,247,.5)">
+              <div style="font-size:30px;margin-bottom:12px">❌</div>
+              <div style="font-weight:700;margin-bottom:8px">Error loading shops</div>
+              <div style="font-size:12px;color:rgba(232,240,247,.4);margin-bottom:16px">${e.message || 'Unknown error. Check browser console.'}</div>
+              <details style="text-align:left;background:rgba(0,0,0,.2);border-radius:8px;padding:12px;font-size:11px;font-family:monospace;color:rgba(232,240,247,.4)">
+                <summary style="cursor:pointer;color:rgba(232,240,247,.6)">Technical Details</summary>
+                <pre style="margin-top:8px;white-space:pre-wrap">${e.stack || e.message}</pre>
+              </details>
+            </div>
+          `;
+       }
+    }
+
+    async function togglePrivacy(shopId, shopCustomerId, el){
+       const isNowOn = !el.classList.contains('on');
+       el.classList.toggle('on');
+       
+       if(!privSettings[shopId]) privSettings[shopId] = {};
+       privSettings[shopId].hideBalance = isNowOn;
+       
+       try {
+          // Write to central portal settings
+          await db.collection('customer_privacy_settings').doc(currentUser.uid).set({
+             [shopId]: { hideBalance: isNowOn }
+          }, {merge: true});
+          
+          // Relay flag directly to Shopkeeper's POS Customer Doc
+          if(shopCustomerId && shopCustomerId !== 'undefined'){
+             await db.collection('shops').doc(shopId).collection('customers').doc(shopCustomerId).update({
+                clientHiddenBalance: isNowOn
+             }).catch(e=>console.log('Failed to relay privacy flag to shop DB', e));
+          }
+       } catch(e) {
+          toast('Failed to save settings', 'error');
+          el.classList.toggle('on'); // Revert
+       }
+    }
+
+    async function requestDelete(shopId){
+       if(!confirm("Are you sure you want to request removal from this shop?")) return;
+       
+       try {
+          await db.collection('customer_delete_requests').add({
+             customerId: currentUser.uid,
+             shopId: shopId,
+             status: 'pending',
+             createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          toast("Removal request sent to Shopkeeper.", "success");
+          initPage();
+       } catch(e) {
+          toast('Failed to request deletion', 'error');
+       }
+    }
+
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+    function signOut(){firebase.auth().signOut().then(()=>location.href='login.html')}
+    firebase.auth().onAuthStateChanged(async user=>{
+      if(!user) location.href='login.html';
+      else {
+         currentUser = user;
+         const localU = localStorage.getItem('hr_user');
+         if(localU){
+            const parsed = JSON.parse(localU);
+            
+            document.getElementById('user-nm').textContent = parsed.name || user.email.split('@')[0];
+            document.getElementById('user-av').textContent = (parsed.name || user.email)[0].toUpperCase();
+         }
+         initPage();
+      }
+    });
+  </script>
+</body>
+</html>

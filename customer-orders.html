@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Place Order — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    .page-content{padding:20px;max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:20px;min-height:calc(100vh - 56px)}
+    
+    .shop-selector{display:flex;align-items:center;gap:12px;background:var(--bg-card);padding:12px 20px;border-radius:12px;border:1px solid var(--border)}
+    body.light-mode .shop-selector{background:#fff;border-color:rgba(0,0,0,.08)}
+    .ss-label{font-size:12px;font-weight:700;color:var(--tx-muted);text-transform:uppercase}
+    .ss-select{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#E8F0F7;font-size:14px;padding:8px 12px;border-radius:8px;outline:none}
+    body.light-mode .ss-select{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:#0D1E2E}
+    
+    .order-layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+    @media(max-width:900px){.order-layout{grid-template-columns:1fr}}
+
+    /* Products Grid */
+    .prod-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(140px,1fr));gap:12px}
+    .prod-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;cursor:pointer;transition:transform .2s,border-color .2s;user-select:none}
+    body.light-mode .prod-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    .prod-card:hover{transform:translateY(-2px);border-color:#00C9B1}
+    .prod-card:active{transform:scale(.98)}
+    
+    .pc-img{width:100%;aspect-ratio:1;background:rgba(255,255,255,.04);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:32px}
+    body.light-mode .pc-img{background:#F8FAFC}
+    .pc-info{display:flex;flex-direction:column;gap:2px}
+    .pc-name{font-size:13px;font-weight:700;line-height:1.2;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .pc-price{font-family:var(--font-display);font-size:15px;font-weight:800;color:#00C9B1}
+    .pc-stock{font-size:10px;color:rgba(232,240,247,.4)}
+    body.light-mode .pc-stock{color:rgba(13,30,46,.4)}
+
+    /* Cart Drawer */
+    .cart-drawer{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;height:calc(100vh - 160px);position:sticky;top:80px}
+    body.light-mode .cart-drawer{background:#fff;border-color:rgba(0,0,0,.08)}
+    .cd-head{padding:16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+    .cd-title{font-family:var(--font-display);font-size:16px;font-weight:700}
+    .cd-badge{background:var(--bg-dark);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700}
+    body.light-mode .cd-badge{background:#CBD5E1;color:#1E293B}
+    
+    .cd-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+    .cd-body::-webkit-scrollbar{width:4px}
+    .cd-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+    
+    .c-item{display:flex;justify-content:space-between;align-items:center;background:rgba(0,0,0,.15);padding:10px;border-radius:8px;gap:8px}
+    body.light-mode .c-item{background:#F8FAFC}
+    .ci-info{flex:1;display:flex;flex-direction:column;gap:2px}
+    .ci-name{font-size:13px;font-weight:600;line-height:1.2}
+    .ci-price{font-size:11px;color:var(--tx-muted)}
+    
+    .ci-qty{display:flex;align-items:center;gap:6px;background:var(--bg-dark);padding:2px;border-radius:6px;border:1px solid var(--border)}
+    body.light-mode .ci-qty{background:#E2E8F0;border-color:rgba(0,0,0,.05)}
+    .qty-btn{background:none;border:none;color:var(--tx-primary);width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px}
+    .qty-val{font-size:12px;font-weight:700;min-width:16px;text-align:center}
+    
+    .cd-foot{padding:16px;border-top:1px solid var(--border);background:rgba(0,0,0,.2);display:flex;flex-direction:column;gap:12px}
+    body.light-mode .cd-foot{background:#F8FAFC}
+    .cf-row{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600}
+    .cf-total{font-family:var(--font-display);font-size:24px;font-weight:800;color:#00C9B1}
+    
+    .btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:transform .1s;box-shadow:0 4px 12px rgba(0,201,177,.2)}
+    .btn-submit:hover{transform:translateY(-2px)}
+    .btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+    /* Floating Cart Check on Mobile */
+    .mob-cart-fab{display:none;position:fixed;bottom:20px;right:20px;background:#00C9B1;color:#000;width:60px;height:60px;border-radius:50%;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,201,177,.4);z-index:100;cursor:pointer;font-size:24px}
+    .mob-cart-fab .badge{position:absolute;top:0;right:0;background:#EF4444;color:#fff;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+    
+    @media(max-width:900px){
+      .cart-drawer{position:fixed;inset:0;height:100vh;z-index:900;transform:translateX(100%);transition:transform .3s;border-radius:0;border:none}
+      .cart-drawer.open{transform:translateX(0)}
+      .mob-cart-fab{display:flex}
+      .cd-head .mob-close{display:block !important;background:none;border:none;color:var(--tx-primary);font-size:24px;cursor:pointer}
+    }
+    
+    .empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;background:var(--bg-card);border:1px dashed var(--border);border-radius:16px}
+    body.light-mode .empty-state{background:#fff;border-color:rgba(0,0,0,.1)}
+    
+    @media(max-width:768px){
+      .sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}
+      .menu-toggle{display:flex}.main-area{margin-left:0}
+    }
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'owner') location.href='dashboard.html';</script>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <div style="display:flex;min-height:100vh">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div>
+        <div class="sb-shop-chip"><div class="sb-shop-av">👤</div><div><div class="sb-shop-name">Customer Portal</div><div class="sb-shop-plan shoppl">Active</div></div></div>
+      </div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="customer-dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a>
+        <a href="customer-orders.html" class="nav-link active"><span class="nav-ico">🛒</span>Order Items</a>
+        <a href="customer-payments.html" class="nav-link"><span class="nav-ico">💳</span>Payments</a>
+        <a href="customer-shops.html" class="nav-link"><span class="nav-ico">🏪</span>My Shops</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="#" class="nav-link"><span class="nav-ico">⚙️</span>Profile & Privacy</a>
+      </nav>
+      <div class="sb-footer">
+        <div class="upgrade-card"><div class="upgrade-title">Secure Hub</div><div class="upgrade-sub">Customer Edition</div></div>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div class="topbar-title">🛒 Place Order</div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()" title="Toggle theme"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="user-pill"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div>
+          <button class="logout-btn" onclick="signOut()">⏻ Logout</button>
+        </div>
+      </div>
+
+      <div class="page-content">
+        
+        <div class="shop-selector">
+          <div class="ss-label">Select Shop:</div>
+          <select class="ss-select" id="shop-drop" onchange="switchShop(this.value)">
+            <option value="">Loading linked shops...</option>
+          </select>
+        </div>
+
+        <div class="order-layout">
+           <!-- LEFT: Products Grid -->
+           <div class="prod-grid" id="prod-grid">
+              <!-- Rendered via JS -->
+           </div>
+
+           <!-- RIGHT: Cart Drawer -->
+           <div class="cart-drawer" id="cart-drawer">
+             <div class="cd-head">
+               <div style="display:flex;align-items:center;gap:8px">
+                  <div class="cd-title">Your Order</div>
+                  <div class="cd-badge" id="cart-badge">0</div>
+               </div>
+               <button class="mob-close" style="display:none" onclick="toggleCartDrawer()">×</button>
+             </div>
+             
+             <div class="cd-body" id="cart-items">
+                <div style="text-align:center;padding:20px;opacity:.5;font-size:12px;margin-top:20px">Your cart is empty.<br>Click items to add them.</div>
+             </div>
+             
+             <div class="cd-foot">
+               <div class="cf-row"><span>Total Amount</span><span class="cf-total" id="cart-total">Rs. 0</span></div>
+               <button class="btn-submit" id="btn-submit" onclick="submitOrder()" disabled>Submit Order →</button>
+             </div>
+           </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="mob-cart-fab" onclick="toggleCartDrawer()">🛒<div class="badge" id="fab-badge">0</div></div>
+
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}})();
+    
+    let currentUser = null;
+    let linkedShops = [];
+    let currentShopId = null;
+    let products = [];
+    let cart = {}; // itemId: {qty, item}
+
+    async function initPage(){
+       try {
+          // 1. Fetch links
+          const linksSnap = await db.collection('customer_shop_links')
+              .where('customerId', '==', currentUser.uid)
+              .get();
+              
+          linkedShops = [];
+          for(let d of linksSnap.docs){
+             const lnk = d.data();
+             if(lnk.status === 'active'){
+                try {
+                   const sDoc = await db.collection('shops').doc(lnk.shopId).get();
+                   if(sDoc.exists) linkedShops.push({id: lnk.shopId, name: sDoc.data().name, internalCustId: lnk.shopCustomerId});
+                }catch(e){}
+             }
+          }
+          
+          const drop = document.getElementById('shop-drop');
+          if(linkedShops.length === 0){
+             drop.innerHTML = '<option value="">No active shops found. Link one first!</option>';
+             document.getElementById('prod-grid').innerHTML = '<div class="empty-state">No shops connected. Go to dashboard to link a shop.</div>';
+             return;
+          }
+          
+          drop.innerHTML = linkedShops.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+          switchShop(linkedShops[0].id);
+          
+       } catch(e) {
+          toast('Error loading shops','error');
+       }
+    }
+
+    async function switchShop(shopId){
+       if(!shopId) return;
+       currentShopId = shopId;
+       cart = {}; // wipe cart
+       renderCart();
+       
+       const grid = document.getElementById('prod-grid');
+       grid.innerHTML = `<div style="text-align:center;padding:40px;opacity:.5;grid-column:1/-1">Loading items...</div>`;
+       
+       try {
+          // IMPORTANT: Customer accesses a subcollection of the shop. 
+          // If firestore rules are open, this pulls fine.
+          const pSnap = await db.collection('shops').doc(shopId).collection('inventory').where('deleted','==',false).get();
+          
+          products = [];
+          pSnap.forEach(d => products.push({id: d.id, ...d.data()}));
+          
+          // Render
+          if(products.length === 0){
+             grid.innerHTML = `<div class="empty-state">The shopowner has no items listed in their inventory.</div>`;
+             return;
+          }
+          
+          grid.innerHTML = products.map(p => `
+            <div class="prod-card" onclick="addToCart('${p.id}')">
+              <div class="pc-img">${p.name[0].toUpperCase()}</div>
+              <div class="pc-info">
+                <div class="pc-name">${p.name}</div>
+                <div class="pc-price">${fmtCur(p.salePrice)}</div>
+                <div class="pc-stock">Stock: ${p.stock||0}</div>
+              </div>
+            </div>
+          `).join('');
+          
+       } catch(e) {
+          console.error(e);
+          grid.innerHTML = `<div class="empty-state" style="color:#F87171">Failed to read inventory. Required database permission not found.</div>`;
+       }
+    }
+
+    function addToCart(id){
+       const p = products.find(x=>x.id===id);
+       if(!p) return;
+       if(!cart[id]) cart[id] = {qty:0, item:p};
+       cart[id].qty++;
+       renderCart();
+    }
+    
+    function modifyQty(id, delta){
+       if(!cart[id]) return;
+       cart[id].qty += delta;
+       if(cart[id].qty <= 0) delete cart[id];
+       renderCart();
+    }
+    
+    function renderCart(){
+       const body = document.getElementById('cart-items');
+       const keys = Object.keys(cart);
+       
+       let tItems = 0;
+       let tAmt = 0;
+       
+       if(keys.length === 0){
+          body.innerHTML = `<div style="text-align:center;padding:20px;opacity:.5;font-size:12px;margin-top:20px">Your cart is empty.<br>Click items to add them.</div>`;
+       } else {
+          let html = '';
+          keys.forEach(k => {
+             const cItem = cart[k];
+             tItems += cItem.qty;
+             tAmt += cItem.item.salePrice * cItem.qty;
+             
+             html += `
+             <div class="c-item">
+               <div class="ci-info">
+                 <div class="ci-name">${cItem.item.name}</div>
+                 <div class="ci-price">${fmtCur(cItem.item.salePrice)} x ${cItem.qty}</div>
+               </div>
+               <div class="ci-qty">
+                 <button class="qty-btn" onclick="modifyQty('${k}', -1)">−</button>
+                 <div class="qty-val">${cItem.qty}</div>
+                 <button class="qty-btn" onclick="modifyQty('${k}', 1)">+</button>
+               </div>
+             </div>
+             `;
+          });
+          body.innerHTML = html;
+       }
+       
+       document.getElementById('cart-badge').textContent = tItems;
+       document.getElementById('fab-badge').textContent = tItems;
+       document.getElementById('cart-total').textContent = fmtCur(tAmt);
+       document.getElementById('btn-submit').disabled = (keys.length === 0);
+    }
+    
+    async function submitOrder(){
+       const keys = Object.keys(cart);
+       if(keys.length === 0 || !currentShopId) return;
+       
+       const btn = document.getElementById('btn-submit');
+       btn.disabled = true; btn.textContent = 'Submitting...';
+       
+       let tAmt = 0;
+       let itemsList = [];
+       keys.forEach(k=>{
+          tAmt += cart[k].item.salePrice * cart[k].qty;
+          itemsList.push({
+             id: cart[k].item.id,
+             name: cart[k].item.name,
+             price: cart[k].item.salePrice,
+             qty: cart[k].qty
+          });
+       });
+       
+       // Find the internal customer mapping for this shop
+       const link = linkedShops.find(s=>s.id === currentShopId);
+       
+       try {
+          await db.collection('shops').doc(currentShopId).collection('orders').add({
+             customerId: currentUser.uid,
+             customerName: currentUser.displayName || currentUser.phone || 'Customer',
+             shopCustomerId: link ? link.internalCustId : null,
+             items: itemsList,
+             total: tAmt,
+             status: 'pending',
+             createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          
+          toast('Order submitted successfully!', 'success');
+          cart = {};
+          renderCart();
+          if(window.innerWidth <= 900) toggleCartDrawer();
+       } catch(e) {
+          toast('Failed to submit order', 'error');
+           console.error(e);
+       }
+       btn.disabled=false; btn.textContent = 'Submit Order →';
+    }
+
+    function toggleCartDrawer(){
+       document.getElementById('cart-drawer').classList.toggle('open');
+    }
+
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+    function signOut(){firebase.auth().signOut().then(()=>location.href='login.html')}
+    firebase.auth().onAuthStateChanged(async user=>{
+      if(!user) location.href='login.html';
+      else {
+         currentUser = user;
+         const localU = localStorage.getItem('hr_user');
+         if(localU){
+            const parsed = JSON.parse(localU);
+            
+            currentUser.phone = parsed.phone || '';
+            currentUser.displayName = parsed.name || '';
+            document.getElementById('user-nm').textContent = parsed.name || user.email.split('@')[0];
+            document.getElementById('user-av').textContent = (parsed.name || user.email)[0].toUpperCase();
+         }
+         initPage();
+      }
+    });
+  </script>
+</body>
+</html>

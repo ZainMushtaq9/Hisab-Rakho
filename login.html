@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Login — Hisab Rakho</title>
+  <meta name="description" content="Login to Hisab Rakho — your shop management app">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:#040D12;color:#E8F0F7;min-height:100vh;overflow-x:hidden}
+    body.light-mode{background:#F0F4F8;color:#0D1E2E}
+
+    /* ── Layout: side-by-side on desktop, stacked on mobile ── */
+    .auth-shell{display:flex;min-height:100vh}
+    .hero-panel{flex:1;background:linear-gradient(135deg,#071520 0%,#0D2B40 50%,#0A1F30 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px;position:relative;overflow:hidden}
+    .hero-panel::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(0,201,177,.12) 0%,transparent 70%);top:-100px;right:-100px}
+    .hero-panel::after{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(44,95,138,.15) 0%,transparent 70%);bottom:-80px;left:-50px}
+    .hero-brand{position:relative;z-index:2;text-align:center}
+    .hero-logo{width:80px;height:80px;border-radius:20px;background:linear-gradient(135deg,#00C9B1,#009E8E);display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 20px;box-shadow:0 0 40px rgba(0,201,177,.25)}
+    .hero-title{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;letter-spacing:-1px;margin-bottom:8px}
+    .hero-title em{color:#00C9B1;font-style:normal}
+    .hero-urdu{font-family:'Noto Nastaliq Urdu',serif;font-size:22px;color:rgba(232,240,247,.35);margin-top:8px;direction:rtl}
+    .hero-sub{font-size:14px;color:rgba(232,240,247,.45);margin-top:12px;max-width:300px;line-height:1.6}
+
+    .form-panel{width:100%;max-width:480px;display:flex;align-items:center;justify-content:center;padding:24px}
+    .form-card{width:100%;max-width:400px;max-height:calc(100vh - 48px);overflow-y:auto;padding:6px}
+    .form-card::-webkit-scrollbar{width:0}
+
+    .f-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,201,177,.1);border:1px solid rgba(0,201,177,.2);border-radius:20px;padding:4px 14px;font-size:11px;font-weight:600;color:#00C9B1;margin-bottom:14px}
+    .f-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px}
+    .f-subtitle{font-size:13px;color:rgba(232,240,247,.45);margin-bottom:20px;line-height:1.5}
+    body.light-mode .f-subtitle{color:rgba(13,30,46,.5)}
+
+    .fg{margin-bottom:12px}
+    .fl{display:block;font-size:11px;font-weight:700;color:rgba(232,240,247,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px}
+    body.light-mode .fl{color:rgba(13,30,46,.45)}
+    .fi-wrap{position:relative}
+    .fi-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;color:rgba(232,240,247,.3);pointer-events:none;z-index:1}
+    body.light-mode .fi-icon{color:rgba(13,30,46,.3)}
+    .fi{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#E8F0F7;font-size:14px;padding:11px 14px 11px 42px;outline:none;transition:border-color .15s,background .15s,box-shadow .15s;min-height:44px;font-family:'Plus Jakarta Sans',sans-serif}
+    body.light-mode .fi{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:#0D1E2E}
+    .fi::placeholder{color:rgba(232,240,247,.2)}
+    body.light-mode .fi::placeholder{color:rgba(13,30,46,.3)}
+    .fi:focus{border-color:#00C9B1;background:rgba(0,201,177,.04);box-shadow:0 0 0 3px rgba(0,201,177,.1)}
+    .fi.err{border-color:#EF4444}
+
+    .fi-hint{font-size:11px;color:rgba(232,240,247,.3);margin-top:3px}
+    body.light-mode .fi-hint{color:rgba(13,30,46,.4)}
+
+    .pw-toggle{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;cursor:pointer;color:rgba(232,240,247,.3);padding:4px}
+
+    .btn-main{width:100%;padding:12px;min-height:46px;background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:transform .1s,box-shadow .15s;font-family:'Plus Jakarta Sans',sans-serif;margin-top:6px}
+    .btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,201,177,.35)}
+    .btn-main:active{transform:scale(.97)}
+    .btn-main:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+    .divider{display:flex;align-items:center;gap:12px;margin:16px 0;font-size:11px;color:rgba(232,240,247,.25)}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.06)}
+    body.light-mode .divider{color:rgba(13,30,46,.3)}
+    body.light-mode .divider::before,body.light-mode .divider::after{background:rgba(0,0,0,.08)}
+
+    .btn-role{flex:1;padding:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:rgba(232,240,247,.45);border-radius:10px;cursor:pointer;font-weight:600;font-size:13px;transition:all .2s;}
+    .btn-role.active{background:rgba(0,201,177,.1);border-color:#00C9B1;color:#00C9B1;}
+    body.light-mode .btn-role{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:rgba(13,30,46,.5)}
+    body.light-mode .btn-role.active{color:#00C9B1;border-color:#00C9B1;background:rgba(0,201,177,.1)}
+
+    .btn-google{width:100%;padding:11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#E8F0F7;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .15s;font-family:'Plus Jakarta Sans',sans-serif}
+    body.light-mode .btn-google{background:#fff;border-color:rgba(0,0,0,.1);color:#0D1E2E}
+    .btn-google:hover{background:rgba(255,255,255,.08)}
+
+    .f-link{text-align:center;margin-top:14px;font-size:13px;color:rgba(232,240,247,.45)}
+    .f-link a{color:#00C9B1;font-weight:600;text-decoration:none}
+    .f-link a:hover{text-decoration:underline}
+    body.light-mode .f-link{color:rgba(13,30,46,.5)}
+
+    .f-forgot{text-align:right;margin-top:-4px;margin-bottom:8px}
+    .f-forgot a{font-size:12px;color:#00C9B1;text-decoration:none;font-weight:500}
+
+    .legal-footer{text-align:center;padding:12px;font-size:12px;color:rgba(232,240,247,.3);margin-top:16px}
+    .legal-footer a{color:#2C5F8A;text-decoration:none;font-weight:500}
+    body.light-mode .legal-footer{color:rgba(13,30,46,.35)}
+
+    .form-error{display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:8px 12px;font-size:12px;color:#F87171;margin-bottom:10px}
+
+    /* ── Mobile responsive ── */
+    @media(max-width:900px){
+      .hero-panel{display:none}
+      .auth-shell{justify-content:center}
+      .form-panel{max-width:100%;padding:20px 16px}
+    }
+    @media(max-width:480px){
+      .form-panel{padding:16px 12px}
+      .f-title{font-size:20px}
+      .fi{font-size:16px;padding:12px 14px 12px 42px}
+    }
+  </style>
+</head>
+<body>
+
+  <div class="auth-shell">
+    <!-- Hero Panel (desktop only) -->
+    <div class="hero-panel">
+      <div class="hero-brand">
+        <div class="hero-logo">🏪</div>
+        <div class="hero-title">Hisab <em>Rakho</em></div>
+        <div class="hero-urdu">اپنی دکان کا حساب رکھو</div>
+        <div class="hero-sub">Smart shop management for Pakistani businesses. Track sales, inventory, customers, and more.</div>
+      </div>
+    </div>
+
+    <!-- Form Panel -->
+    <div class="form-panel">
+      <div class="form-card">
+        <div class="f-badge">🔐 Welcome Back</div>
+        <div class="f-title">Login</div>
+        <div class="f-subtitle" id="login-sub">Sign in to manage your shop</div>
+
+        <div class="form-error" id="login-err"></div>
+
+        <div class="fg">
+          <label class="fl">Login as a...</label>
+          <div style="display:flex;gap:10px;margin-bottom:12px">
+            <button type="button" class="btn-role active" id="btn-role-owner" onclick="setRole('owner')">🏪 Shop Owner</button>
+            <button type="button" class="btn-role" id="btn-role-customer" onclick="setRole('customer')">🛒 Customer</button>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Email Address</label>
+          <div class="fi-wrap">
+            <span class="fi-icon">✉️</span>
+            <input class="fi" id="email" type="email" placeholder="you@example.com" autocomplete="email" required>
+          </div>
+        </div>
+
+        <div class="fg">
+          <label class="fl">Password</label>
+          <div class="fi-wrap">
+            <span class="fi-icon">🔒</span>
+            <input class="fi" id="password" type="password" placeholder="Enter password" autocomplete="current-password" required>
+            <button class="pw-toggle" type="button" onclick="togglePw()">👁</button>
+          </div>
+        </div>
+
+        <div class="f-forgot"><a href="forgot-password.html">Forgot Password?</a></div>
+
+        <button class="btn-main" id="login-btn" onclick="doLogin()">Login →</button>
+
+
+
+        <div class="f-link">Don't have an account? <a href="signup.html">Create Account</a></div>
+
+        <div class="legal-footer">
+          By using this app, you agree to our
+          <a href="terms.html">Terms of Service</a> and
+          <a href="privacy.html">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+
+  <script>
+    // Theme init
+    (function(){
+      if(localStorage.getItem('hr_theme')==='light') document.body.classList.add('light-mode');
+    })();
+
+    let selectedRole = 'owner';
+    function setRole(r){
+      selectedRole = r;
+      document.getElementById('btn-role-owner').classList.toggle('active', r==='owner');
+      document.getElementById('btn-role-customer').classList.toggle('active', r==='customer');
+      
+      const sub = document.getElementById('login-sub');
+      if(r==='customer'){
+        sub.textContent = "Sign in to track your bills and shop online";
+      } else {
+        sub.textContent = "Sign in to manage your shop";
+      }
+    }
+
+    // Toggle password visibility
+    function togglePw(){
+      const p=document.getElementById('password');
+      p.type = p.type==='password'?'text':'password';
+    }
+
+    // Show error
+    function showErr(msg){
+      const el=document.getElementById('login-err');
+      el.textContent=msg;
+      el.style.display='block';
+    }
+    function hideErr(){
+      document.getElementById('login-err').style.display='none';
+    }
+
+    // Write login activity + session to Firestore
+    async function writeLoginActivity(uid){
+      try {
+        const device = navigator.userAgent.substring(0,120);
+        let ip = '—';
+        try {
+          const r = await fetch('https://api.ipify.org?format=json');
+          const j = await r.json();
+          ip = j.ip || '—';
+        } catch(_){}
+
+        // Login activity log
+        await db.collection('login_activity').add({
+          userId:      uid,
+          device_info: device,
+          ip_address:  ip,
+          login_time:  firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Session record
+        let sessionId = localStorage.getItem('hr_session_id');
+        if(!sessionId){
+          sessionId = Math.random().toString(36).slice(2) + Date.now().toString(36);
+          localStorage.setItem('hr_session_id', sessionId);
+        }
+        await db.collection('user_sessions').doc(sessionId).set({
+          userId:        uid,
+          device_info:   device,
+          ip_address:    ip,
+          last_active_at:firebase.firestore.FieldValue.serverTimestamp(),
+          created_at:    firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } catch(e){ console.warn('Activity write:', e); }
+    }
+
+    // Email/Password Login
+    async function doLogin(){
+      hideErr();
+      const email=document.getElementById('email').value.trim();
+      const pw=document.getElementById('password').value;
+      if(!email){showErr('Please enter your email address');return}
+      if(!pw){showErr('Please enter your password');return}
+
+      const btn=document.getElementById('login-btn');
+      btn.disabled=true;btn.textContent='Signing in...';
+
+      try{
+        const cred = await auth.signInWithEmailAndPassword(email, pw);
+        const user = cred.user;
+
+        // Write login activity (non-blocking)
+        writeLoginActivity(user.uid);
+
+        // Load user + shop data
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if(userDoc.exists){
+          const u = userDoc.data();
+          localStorage.setItem('hr_user', JSON.stringify(u));
+          
+          if(u.role === 'customer'){
+              location.href='customer-dashboard.html';
+              return;
+          }
+
+          if(u.shopId){
+            const shopDoc = await db.collection('shops').doc(u.shopId).get();
+            if(shopDoc.exists){
+              localStorage.setItem('hr_shop', JSON.stringify({shopId:shopDoc.id, ...shopDoc.data()}));
+            }
+            location.href='dashboard.html';
+          } else {
+            location.href='setup.html';
+          }
+        } else {
+          location.href='setup.html';
+        }
+      } catch(e){
+        let msg='Login failed. Please try again.';
+        if(e.code==='auth/user-not-found') msg='No account found with this email.';
+        else if(e.code==='auth/wrong-password') msg='Incorrect password.';
+        else if(e.code==='auth/invalid-email') msg='Invalid email address.';
+        else if(e.code==='auth/too-many-requests') msg='Too many attempts. Please wait and try again.';
+        else if(e.code==='auth/network-request-failed') msg='No internet connection. Please check your network.';
+        showErr(msg);
+        btn.disabled=false;btn.textContent='Login →';
+      }
+    }
+
+    // Enter key submits
+    document.getElementById('password').addEventListener('keydown', e => {
+      if(e.key==='Enter') doLogin();
+    });
+
+    // If already logged in, redirect
+    auth.onAuthStateChanged(user => {
+      if(user){
+        const storedU = localStorage.getItem('hr_user');
+        if(storedU){
+           const uObj = JSON.parse(storedU);
+           if(uObj.role === 'customer') location.href='customer-dashboard.html';
+           else {
+              const shop = localStorage.getItem('hr_shop');
+              if(shop && JSON.parse(shop).shopId) location.href='dashboard.html';
+           }
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+
+
+    // If already logged in, redirect
+    auth.onAuthStateChanged(user => {
+      if(user && user.emailVerified){
+        const storedU = localStorage.getItem('hr_user');
+        if(storedU){
+           const uObj = JSON.parse(storedU);
+           if(uObj.role === 'customer') location.href='customer-dashboard.html';
+           else {
+              const shop = localStorage.getItem('hr_shop');
+              if(shop && JSON.parse(shop).shopId) location.href='dashboard.html';
+           }
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hisab Rakho</title>
+  <meta name="description" content="Hisab Rakho — Smart shop management for Pakistani businesses">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <script>
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('SW registered:', reg.scope))
+        .catch(err => console.warn('SW registration failed:', err));
+    }
+    // Redirect to splash or dashboard
+    const shop = localStorage.getItem('hr_shop');
+    if (shop && JSON.parse(shop).shopId) {
+      location.replace('dashboard.html');
+    } else {
+      location.replace('splash.html');
+    }
+  </script>
+</head>
+
+<body style="background:#040D12"></body>
+
+</html>

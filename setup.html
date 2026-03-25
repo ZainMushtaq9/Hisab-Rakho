@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Setup Your Shop — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Plus Jakarta Sans',sans-serif;background:#040D12;color:#E8F0F7;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow-x:hidden}
+    body.light-mode{background:#F0F4F8;color:#0D1E2E}
+
+    .card{width:100%;max-width:440px;padding:28px 24px;margin:16px}
+    .icon-ring{width:72px;height:72px;border-radius:50%;background:rgba(0,201,177,.1);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;border:2px solid rgba(0,201,177,.2)}
+    .f-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;text-align:center;margin-bottom:6px}
+    .f-subtitle{font-size:13px;color:rgba(232,240,247,.45);text-align:center;margin-bottom:24px;line-height:1.5}
+    body.light-mode .f-subtitle{color:rgba(13,30,46,.5)}
+
+    .fg{margin-bottom:14px}
+    .fl{display:block;font-size:11px;font-weight:700;color:rgba(232,240,247,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px}
+    body.light-mode .fl{color:rgba(13,30,46,.45)}
+    .fi-wrap{position:relative}
+    .fi-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;color:rgba(232,240,247,.3);pointer-events:none}
+    .fi{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#E8F0F7;font-size:14px;padding:11px 14px 11px 42px;outline:none;transition:border-color .15s,background .15s,box-shadow .15s;min-height:44px;font-family:'Plus Jakarta Sans',sans-serif}
+    body.light-mode .fi{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:#0D1E2E}
+    .fi::placeholder{color:rgba(232,240,247,.2)}
+    body.light-mode .fi::placeholder{color:rgba(13,30,46,.3)}
+    .fi:focus{border-color:#00C9B1;background:rgba(0,201,177,.04);box-shadow:0 0 0 3px rgba(0,201,177,.1)}
+    .fi.no-icon{padding-left:14px}
+    .fi-hint{font-size:11px;color:rgba(232,240,247,.3);margin-top:3px}
+    select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='rgba(232,240,247,0.3)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:36px}
+    select.fi option{background:#071520}
+
+    .btn-main{width:100%;padding:12px;min-height:46px;background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:transform .1s,box-shadow .15s;font-family:'Plus Jakarta Sans',sans-serif;margin-top:8px}
+    .btn-main:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,201,177,.35)}
+    .btn-main:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+    .form-error{display:none;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:8px 12px;font-size:12px;color:#F87171;margin-bottom:10px}
+
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+    @media(max-width:480px){
+      .card{padding:24px 16px}
+      .f-title{font-size:20px}
+      .fi{font-size:16px}
+      .row2{grid-template-columns:1fr}
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="icon-ring">🏪</div>
+    <div class="f-title">Setup Your Shop</div>
+    <div class="f-subtitle">Tell us about your business to get started</div>
+
+    <div class="form-error" id="setup-err"></div>
+
+    <div class="fg">
+      <label class="fl">Shop Name *</label>
+      <div class="fi-wrap">
+        <span class="fi-icon">🏬</span>
+        <input class="fi" id="shop-name" type="text" placeholder="e.g. Ali General Store" required>
+      </div>
+    </div>
+
+    <div class="row2">
+      <div class="fg">
+        <label class="fl">Business Type</label>
+        <div class="fi-wrap">
+          <span class="fi-icon">📋</span>
+          <select class="fi" id="shop-type">
+            <option value="general">General Store</option>
+            <option value="grocery">Grocery</option>
+            <option value="electronics">Electronics</option>
+            <option value="clothing">Clothing</option>
+            <option value="pharmacy">Pharmacy</option>
+            <option value="hardware">Hardware</option>
+            <option value="restaurant">Restaurant</option>
+            <option value="wholesale">Wholesale</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg">
+        <label class="fl">Currency</label>
+        <div class="fi-wrap">
+          <span class="fi-icon">💰</span>
+          <select class="fi" id="shop-currency">
+            <option value="PKR">PKR (Rs.)</option>
+            <option value="USD">USD ($)</option>
+            <option value="AED">AED</option>
+            <option value="SAR">SAR</option>
+            <option value="GBP">GBP (£)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Shop Phone</label>
+      <div class="fi-wrap">
+        <span class="fi-icon">📱</span>
+        <input class="fi" id="shop-phone" type="tel" placeholder="03XX XXXXXXX">
+      </div>
+    </div>
+
+    <div class="fg">
+      <label class="fl">Shop Address</label>
+      <div class="fi-wrap">
+        <span class="fi-icon">📍</span>
+        <input class="fi" id="shop-address" type="text" placeholder="Street, area, city">
+      </div>
+    </div>
+
+    <button class="btn-main" id="setup-btn" onclick="doSetup()">Setup Your Shop →</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light')document.body.classList.add('light-mode')})();
+
+    // Redirect if not logged in
+    auth.onAuthStateChanged(user => {
+      if (!user) location.href = 'login.html';
+    });
+
+    function showErr(msg) {
+      const el = document.getElementById('setup-err');
+      el.textContent = msg; el.style.display = 'block';
+    }
+
+    async function doSetup() {
+      document.getElementById('setup-err').style.display = 'none';
+      
+      const name = document.getElementById('shop-name').value.trim();
+      if (!name || name.length < 2) { showErr('Please enter your shop name (at least 2 characters)'); return; }
+      
+      const btn = document.getElementById('setup-btn');
+      btn.disabled = true; btn.textContent = 'Setting up...';
+
+      const user = auth.currentUser;
+      if (!user) { showErr('You are not logged in'); btn.disabled = false; btn.textContent = 'Setup Your Shop →'; return; }
+
+      try {
+        // Create shop document
+        const shopRef = db.collection('shops').doc();
+        const shopData = {
+          name,
+          type: document.getElementById('shop-type').value,
+          currency: document.getElementById('shop-currency').value,
+          phone: document.getElementById('shop-phone').value.trim(),
+          address: document.getElementById('shop-address').value.trim(),
+          ownerId: user.uid,
+          ownerEmail: user.email,
+          subscription: 'free',
+          subscriptionExpiry: null,
+          deleted: false,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await shopRef.set(shopData);
+
+        // Link shop to user
+        await db.collection('users').doc(user.uid).update({
+          shopId: shopRef.id,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Cache locally
+        localStorage.setItem('hr_shop', JSON.stringify({ shopId: shopRef.id, ...shopData }));
+
+        toast('Shop created successfully!', 'success');
+        setTimeout(() => location.href = 'dashboard.html', 1200);
+      } catch(e) {
+        showErr('Setup failed: ' + e.message);
+        btn.disabled = false; btn.textContent = 'Setup Your Shop →';
+      }
+    }
+  </script>
+</body>
+</html>

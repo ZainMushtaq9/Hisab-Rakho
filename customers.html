@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Customers — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    /* ── CUSTOMERS PAGE SPECIFIC ── */
+    .cust-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+    .cs{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+    .cs-val{font-family:var(--font-display);font-size:20px;font-weight:700;margin-bottom:2px}
+    .cs-lbl{font-size:11px;color:var(--tx-muted)}
+    .cust-list{display:flex;flex-direction:column;gap:8px}
+    .cust-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:all .15s}
+    .cust-card:hover{border-color:rgba(0,201,177,.2);transform:translateY(-1px)}
+    .cc-av{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0;background:rgba(0,201,177,.1);color:#00C9B1}
+    .cc-info{flex:1;min-width:0}.cc-name{font-size:14px;font-weight:700;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.cc-phone{font-size:11px;color:var(--tx-muted);margin-top:1px}
+    .cc-right{text-align:right;flex-shrink:0}.cc-bal{font-family:var(--font-display);font-size:14px;font-weight:700}.cc-lbl{font-size:10px;color:var(--tx-muted)}
+    .cc-actions{display:flex;gap:6px;flex-shrink:0}.cc-act{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all .15s}
+    .cc-act.wa{background:rgba(37,211,102,.1);color:#25D366}.cc-act.wa:hover{background:rgba(37,211,102,.2)}
+    .cc-act.del{background:rgba(239,68,68,.08);color:#F87171}.cc-act.del:hover{background:rgba(239,68,68,.18)}
+    @media(max-width:768px){.cust-stats{grid-template-columns:1fr 1fr 1fr;gap:6px}.cs{padding:10px}.cs-val{font-size:16px}}
+    @media(max-width:480px){.cust-stats{grid-template-columns:1fr}.fi{font-size:16px}}
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+  <div style="display:flex;min-height:100vh">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand"><div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div><div class="sb-shop-chip"><div class="sb-shop-av">🛒</div><div><div class="sb-shop-name" id="sb-shop">Shop</div><div class="sb-shop-plan">FREE</div></div></div></div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a><a href="pos.html" class="nav-link"><span class="nav-ico">💳</span>New Sale</a><a href="inventory.html" class="nav-link"><span class="nav-ico">📦</span>Inventory</a><a href="customers.html" class="nav-link active"><span class="nav-ico">👥</span>Customers</a><a href="suppliers.html" class="nav-link"><span class="nav-ico">🚚</span>Suppliers</a><a href="bills.html" class="nav-link"><span class="nav-ico">🧾</span>Bills</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">FINANCE</div>
+        <a href="expenses.html" class="nav-link"><span class="nav-ico">💸</span>Expenses</a><a href="daily-cash.html" class="nav-link"><span class="nav-ico">💰</span>Daily Cash</a><a href="returns.html" class="nav-link"><span class="nav-ico">↩</span>Returns</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">CUSTOMER PORTAL</div>
+        <a href="shop-requests.html" class="nav-link"><span class="nav-ico">🔔</span>Requests</a>
+        
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="settings.html" class="nav-link"><span class="nav-ico">⚙️</span>Settings</a>
+      </nav>
+      <div class="sb-footer"><div class="upgrade-card"><div class="upgrade-title">⚡ Upgrade</div><div class="upgrade-sub">Unlimited customers</div><button class="upgrade-btn" onclick="location.href='subscription.html'">Rs. 999/mo →</button></div></div>
+    </aside>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button class="menu-toggle" onclick="openSidebar()">☰</button><div class="topbar-title">👥 Customers</div></div>
+        <div class="topbar-right"><div class="icon-btn" onclick="toggleTheme()"><span class="theme-toggle-btn">🌙</span></div><div class="user-pill" onclick="location.href='settings.html'"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div><button class="logout-btn" onclick="signOut()">⏻ Logout</button></div>
+      </div>
+
+      <div class="page-content">
+        <div class="cust-stats">
+          <div class="cs"><div class="cs-val" id="cs-total" style="color:#93C5FD">—</div><div class="cs-lbl">Total Customers</div></div>
+          <div class="cs"><div class="cs-val" id="cs-udhaar" style="color:#F87171">—</div><div class="cs-lbl">Pending Balance</div></div>
+          <div class="cs"><div class="cs-val" id="cs-count" style="color:#F5A623">—</div><div class="cs-lbl">With Balance</div></div>
+        </div>
+
+        <div class="toolbar">
+          <div class="toolbar-search"><span class="ts-icon">🔍</span><input type="text" id="search" placeholder="Search customers..." oninput="filterCustomers()"></div>
+          <button class="toolbar-btn primary" onclick="openModal()">➕ Add Customer</button>
+        </div>
+
+        <div class="cust-list" id="cust-list">
+          <div class="empty-state"><div class="es-icon">⏳</div>Loading customers...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Modal -->
+  <div class="modal-overlay" id="modal">
+    <div class="modal">
+      <div class="modal-title"><span id="modal-title-text">➕ Add Customer</span><span class="modal-close" onclick="closeModal()">✕</span></div>
+      <div class="form-error" id="modal-err"></div>
+      <input type="hidden" id="edit-id">
+      <div class="grid-2" style="margin-bottom:16px;align-items:start">
+        <div class="fg" style="margin-bottom:0"><label class="fl">Full Name *</label><input class="fi" id="m-name" placeholder="Customer name"></div>
+        <div class="fg" style="margin-bottom:0"><label class="fl">Phone Number</label><input class="fi" id="m-phone" type="tel" placeholder="03XX XXXXXXX"></div>
+        <div class="fg" style="margin-bottom:0;grid-column:1/-1"><label class="fl">Address</label><input class="fi" id="m-addr" placeholder="Address (optional)"></div>
+        <div class="fg" style="margin-bottom:0"><label class="fl">Opening Balance (Rs.)</label><input class="fi" id="m-bal" type="number" placeholder="0" min="0"></div>
+        <div class="fg" style="margin-bottom:0"><label class="fl">Notes</label><input class="fi" id="m-notes" placeholder="Notes (optional)"></div>
+      </div>
+      <button class="btn-main" id="modal-btn" onclick="saveCustomer()">Save Customer →</button>
+    </div>
+  </div>
+
+  <nav class="mobile-nav"><div class="mob-nav-inner"><a href="dashboard.html" class="mob-nav-item"><span class="mob-nav-icon">🏠</span>Home</a><a href="pos.html" class="mob-nav-item"><span class="mob-nav-icon">➕</span>Sale</a><a href="inventory.html" class="mob-nav-item"><span class="mob-nav-icon">📦</span>Inventory</a><a href="customers.html" class="mob-nav-item active"><span class="mob-nav-icon">👥</span>Customers</a><a href="settings.html" class="mob-nav-item"><span class="mob-nav-icon">⚙️</span>More</a></div></nav>
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');const user=JSON.parse(localStorage.getItem('hr_user')||'{}');
+      if(shop.name)document.getElementById('sb-shop').textContent=shop.name;
+      if(user.name){document.getElementById('user-nm').textContent=user.name;document.getElementById('user-av').textContent=(user.name[0]||'U').toUpperCase()}
+    })();
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+
+    let allCustomers=[];
+
+    async function loadCustomers(){
+      try{
+        allCustomers=await DataService.getCustomers();
+        document.getElementById('cs-total').textContent=allCustomers.length;
+        const totalBal=allCustomers.reduce((s,c)=>s+(c.balance||0),0);
+        document.getElementById('cs-udhaar').textContent=fmtCur(totalBal);
+        document.getElementById('cs-count').textContent=allCustomers.filter(c=>(c.balance||0)>0).length;
+        renderCustomers(allCustomers);
+      }catch(e){console.error(e);toast('Failed to load','error')}
+    }
+
+    function filterCustomers(){
+      const q=(document.getElementById('search').value||'').toLowerCase().trim();
+      if(!q){renderCustomers(allCustomers);return}
+      renderCustomers(allCustomers.filter(c=>(c.name||'').toLowerCase().includes(q)||(c.phone||'').includes(q)));
+    }
+
+    function renderCustomers(custs){
+      const el=document.getElementById('cust-list');
+      if(!custs.length){el.innerHTML='<div class="empty-state"><div class="es-icon">👥</div>No customers found<br><button onclick="openModal()" style="color:#00C9B1;font-weight:600;background:none;border:none;cursor:pointer;font-size:14px;margin-top:8px">Add your first customer →</button></div>';return}
+      el.innerHTML=custs.map(c=>{
+        const bal=c.balance||0;
+        const balColor=bal>0?'#F87171':'#34D399';
+        const privIco=c.clientHiddenBalance?'<span title="Privacy Request: Customer has hidden their balance on their Portal" style="font-size:12px;margin-left:4px">🔒</span>':'';
+        return`<div class="cust-card" onclick="location.href='customer-detail.html?id=${c.id}'">
+          <div class="cc-av">${(c.name||'?')[0].toUpperCase()}</div>
+          <div class="cc-info"><div class="cc-name">${c.name}${privIco}</div><div class="cc-phone">${c.phone||'No phone'}</div></div>
+          <div class="cc-right"><div class="cc-bal" style="color:${balColor}">${fmtCur(bal)}</div><div class="cc-lbl">${bal>0?'Pending':'Clear'}</div></div>
+          <div class="cc-actions">
+            <div class="cc-act wa" onclick="event.stopPropagation();sendWA('${c.phone}','${c.name}',${bal})" title="WhatsApp">📱</div>
+            <div class="cc-act" style="background:rgba(59,130,246,.1);color:#93C5FD" onclick="event.stopPropagation();editCustomer('${c.id}')" title="Edit">✏️</div>
+            <div class="cc-act del" onclick="event.stopPropagation();delCustomer('${c.id}','${c.name}')" title="Delete">🗑</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    function sendWA(phone,name,balance){
+      const num=(phone||'').replace(/^0/,'92').replace(/\D/g,'');
+      if(!num){toast('No phone number','warning');return}
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');
+      const msg=`Assalam o Alaikum ${name},\n\n${shop.name||'Our shop'} has a pending balance of Rs. ${(balance||0).toLocaleString()} on your account.\n\nPlease clear at your earliest.\n\nThank you! 🙏`;
+      window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank');
+    }
+
+    function openModal(custId){
+      document.getElementById('modal').classList.add('open');
+      document.getElementById('modal-err').style.display='none';
+      if(custId){
+        const c=allCustomers.find(x=>x.id===custId);
+        if(c){
+          document.getElementById('modal-title-text').textContent='✏️ Edit Customer';
+          document.getElementById('modal-btn').textContent='Update Customer →';
+          document.getElementById('edit-id').value=custId;
+          document.getElementById('m-name').value=c.name||'';
+          document.getElementById('m-phone').value=c.phone||'';
+          document.getElementById('m-addr').value=c.address||'';
+          document.getElementById('m-bal').value=c.balance||0;
+          document.getElementById('m-notes').value=c.notes||'';
+          return;
+        }
+      }
+      document.getElementById('modal-title-text').textContent='➕ Add Customer';
+      document.getElementById('modal-btn').textContent='Save Customer →';
+      document.getElementById('edit-id').value='';
+      ['m-name','m-phone','m-addr','m-bal','m-notes'].forEach(id=>document.getElementById(id).value='');
+    }
+    function editCustomer(id){openModal(id)}
+    function closeModal(){document.getElementById('modal').classList.remove('open')}
+
+    async function saveCustomer(){
+      const name=document.getElementById('m-name').value.trim();
+      const err=document.getElementById('modal-err');err.style.display='none';
+      if(!name||name.length<2){err.textContent='Name is required (min 2 chars)';err.style.display='block';return}
+      const btn=document.getElementById('modal-btn');btn.disabled=true;btn.textContent='Saving...';
+      const editId=document.getElementById('edit-id').value;
+      const data={name,phone:document.getElementById('m-phone').value.trim(),address:document.getElementById('m-addr').value.trim(),balance:parseFloat(document.getElementById('m-bal').value)||0,notes:document.getElementById('m-notes').value.trim()};
+      try{
+        if(editId){await DataService.updateCustomer(editId,data);toast('Customer updated','success')}
+        else{await DataService.saveCustomer(data);toast('Customer added!','success')}
+        closeModal();loadCustomers();
+      }catch(e){err.textContent=e.message;err.style.display='block'}
+      finally{btn.disabled=false;btn.textContent=editId?'Update Customer →':'Save Customer →'}
+    }
+
+    async function delCustomer(id,name){
+      if(!confirm(`Permanently delete "${name}" and all their transactions?`))return;
+      try{await DataService.deleteCustomer(id,name);toast(`${name} deleted`,'success');loadCustomers()}
+      catch(e){toast('Delete failed: '+e.message,'error')}
+    }
+
+    auth.onAuthStateChanged(u=>{if(!u){location.href='login.html';return}if(!u.emailVerified){location.href='verify-email.html';return}loadCustomers()});
+  </script>
+</body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Customer Detail — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#040D12">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Plus Jakarta Sans',sans-serif;background:#040D12;color:#E8F0F7;min-height:100vh}body.light-mode{background:#F0F4F8;color:#0D1E2E}a{color:inherit;text-decoration:none}button{cursor:pointer;font-family:inherit;border:none;background:none}
+    .topbar{position:sticky;top:0;z-index:300;height:56px;background:rgba(4,13,18,.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;padding:0 20px;gap:12px}body.light-mode .topbar{background:rgba(255,255,255,.95);border-bottom-color:rgba(0,0,0,.08)}.back-btn{width:34px;height:34px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;color:inherit}.topbar-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;flex:1}.icon-btn{width:34px;height:34px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;color:inherit}.del-btn{padding:7px 14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;color:#F87171;font-size:12px;font-weight:600;cursor:pointer}
+    .page-wrap{max-width:700px;margin:0 auto;padding:20px 16px}
+    .profile-card{background:#0D1E2E;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:24px;text-align:center;margin-bottom:16px}body.light-mode .profile-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    .pf-av{width:72px;height:72px;border-radius:50%;background:rgba(0,201,177,.1);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#00C9B1;margin:0 auto 12px}.pf-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;margin-bottom:4px}.pf-phone{font-size:13px;color:rgba(232,240,247,.4);margin-bottom:4px}.pf-addr{font-size:12px;color:rgba(232,240,247,.3)}
+    .bal-strip{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:16px 0}.bal-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px;text-align:center}.bc-val{font-family:'Syne',sans-serif;font-size:18px;font-weight:700}.bc-lbl{font-size:10px;color:rgba(232,240,247,.35)}
+    .action-strip{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+    .act-btn{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;transition:all .15s}
+    .act-btn.green{background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.2);color:#25D366}.act-btn.green:hover{background:rgba(37,211,102,.2)}
+    .act-btn.blue{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:#93C5FD}.act-btn.blue:hover{background:rgba(59,130,246,.2)}
+    .act-btn.teal{background:rgba(0,201,177,.1);border:1px solid rgba(0,201,177,.2);color:#00C9B1}.act-btn.teal:hover{background:rgba(0,201,177,.2)}
+
+    .panel{background:#0D1E2E;border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;margin-bottom:16px}body.light-mode .panel{background:#fff;border-color:rgba(0,0,0,.08)}.panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.07)}.panel-title{font-size:13px;font-weight:700}.panel-body{padding:4px 0}
+    .txn-row{display:flex;align-items:center;gap:11px;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,.05)}.txn-row:last-child{border-bottom:none}.txn-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}.txn-info{flex:1}.txn-name{font-size:13px;font-weight:600}.txn-meta{font-size:10px;color:rgba(232,240,247,.3)}.txn-amt{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+
+    /* Payment modal */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(4,13,18,.85);backdrop-filter:blur(8px);z-index:500;align-items:center;justify-content:center}.modal-overlay.open{display:flex}
+    .modal{background:#0D1E2E;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:24px;width:100%;max-width:400px;margin:16px}body.light-mode .modal{background:#fff;border-color:rgba(0,0,0,.1)}
+    .modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;margin-bottom:16px;display:flex;justify-content:space-between}.modal-close{font-size:18px;cursor:pointer;color:rgba(232,240,247,.4)}
+    .fg{margin-bottom:12px}.fl{display:block;font-size:11px;font-weight:700;color:rgba(232,240,247,.35);letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px}body.light-mode .fl{color:rgba(13,30,46,.45)}.fi{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;color:#E8F0F7;font-size:14px;padding:11px 14px;outline:none;min-height:44px;font-family:inherit}body.light-mode .fi{background:#F5F7FA;border-color:rgba(0,0,0,.1);color:#0D1E2E}.fi:focus{border-color:#00C9B1;box-shadow:0 0 0 3px rgba(0,201,177,.1)}
+    .btn-main{width:100%;padding:12px;background:linear-gradient(135deg,#00C9B1,#009E8E);color:#040D12;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:6px}.btn-main:disabled{opacity:.45;cursor:not-allowed}
+    .loading-overlay{position:fixed;inset:0;background:rgba(4,13,18,.8);display:flex;align-items:center;justify-content:center;z-index:999}.loader{width:40px;height:40px;border:3px solid rgba(0,201,177,.15);border-top-color:#00C9B1;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:480px){.page-wrap{padding:12px}.bal-strip{grid-template-columns:1fr}.bc-val{font-size:16px}.fi{font-size:16px}}
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+  <div class="loading-overlay" id="loading"><div class="loader"></div></div>
+  <div class="topbar">
+    <button class="back-btn" onclick="location.href='customers.html'">←</button>
+    <div class="topbar-title" id="pg-title">Customer</div>
+    <div class="icon-btn" onclick="toggleTheme()"><span class="theme-toggle-btn">🌙</span></div>
+    <button class="del-btn" onclick="delCustomer()">🗑 Delete</button>
+  </div>
+  <div class="page-wrap">
+    <div class="profile-card">
+      <div class="pf-av" id="pf-av">?</div>
+      <div class="pf-name" id="pf-name">—</div>
+      <div class="pf-phone" id="pf-phone">—</div>
+      <div class="pf-addr" id="pf-addr"></div>
+        <div class="bc-grid" style="margin-top:20px">
+          <div class="bc-box">
+            <div class="bc-lbl">Total Business</div><div class="bc-val" id="bc-total">Rs. 0</div>
+          </div>
+          <div class="bc-box">
+            <div class="bc-lbl">Total Received</div><div class="bc-val" id="bc-paid">Rs. 0</div>
+          </div>
+          <div class="bc-box highlight">
+            <div class="bc-lbl">Pending Dues</div><div class="bc-val" id="bc-bal" style="color:#000">Rs. 0</div>
+          </div>
+        </div>
+
+        <!-- Smart Credit Aging System -->
+        <div style="margin-top:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px" id="aging-card">
+           <div style="font-size:12px;font-weight:700;margin-bottom:12px;color:var(--tx-muted);text-transform:uppercase;letter-spacing:0.5px">⏳ Smart Credit Aging</div>
+           <div style="display:flex;gap:12px;text-align:center">
+             <div style="flex:1;background:rgba(52,211,153,.1);color:#34D399;padding:10px;border-radius:8px">
+               <div style="font-size:11px;opacity:0.8">0-30 Days</div><div id="age-0-30" style="font-family:var(--font-display);font-size:15px;font-weight:800">Rs. 0</div>
+             </div>
+             <div style="flex:1;background:rgba(245,158,11,.1);color:#F59E0B;padding:10px;border-radius:8px">
+               <div style="font-size:11px;opacity:0.8">31-60 Days</div><div id="age-31-60" style="font-family:var(--font-display);font-size:15px;font-weight:800">Rs. 0</div>
+             </div>
+             <div style="flex:1;background:rgba(239,68,68,.1);color:#EF4444;padding:10px;border-radius:8px">
+               <div style="font-size:11px;opacity:0.8">60+ Days</div><div id="age-90-plus" style="font-family:var(--font-display);font-size:15px;font-weight:800">Rs. 0</div>
+             </div>
+           </div>
+        </div>
+
+        <!-- Deep Customer Insights -->
+        <div style="margin-top:12px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:16px" id="insights-card">
+           <div style="font-size:12px;font-weight:700;margin-bottom:12px;color:var(--tx-muted);text-transform:uppercase;letter-spacing:0.5px">✨ Deep Insights</div>
+           <div style="display:flex;gap:12px;text-align:center">
+             <div style="flex:1;background:rgba(255,255,255,.03);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.05)">
+               <div style="font-size:11px;color:var(--tx-muted);margin-bottom:4px">Favorite Item</div>
+               <div id="ins-fav" style="font-family:var(--font-display);font-size:13px;font-weight:700;color:var(--gold);line-height:1.2">Analyzing...</div>
+             </div>
+             <div style="flex:1;background:rgba(255,255,255,.03);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.05)">
+               <div style="font-size:11px;color:var(--tx-muted);margin-bottom:4px">Avg Order</div>
+               <div id="ins-aov" style="font-family:var(--font-display);font-size:15px;font-weight:700">...</div>
+             </div>
+             <div style="flex:1;background:rgba(255,255,255,.03);padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,.05)">
+               <div style="font-size:11px;color:var(--tx-muted);margin-bottom:4px">Frequency</div>
+               <div id="ins-freq" style="font-family:var(--font-display);font-size:13px;font-weight:700;color:#00C9B1">...</div>
+             </div>
+           </div>
+        </div>
+
+      <div class="action-strip">
+        <button class="act-btn teal" onclick="openPayModal()">💰 Record Payment</button>
+        <button class="act-btn green" id="wa-btn">📱 WhatsApp Reminder</button>
+        <button class="act-btn blue" onclick="location.href='pos.html'">🛒 New Sale</button>
+      </div>
+      <div class="section-title">Recent Transactions</div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div class="panel-title">📜 Transaction History</div></div>
+      <div class="panel-body" id="txn-list"><div style="text-align:center;padding:40px;color:rgba(232,240,247,.3)">⏳ Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal-overlay" id="pay-modal">
+    <div class="modal">
+      <div class="modal-title"><span>💰 Record Payment</span><span class="modal-close" onclick="closePayModal()">✕</span></div>
+      <div class="grid-2" style="margin-bottom:16px;align-items:start">
+        <div class="fg" style="margin-bottom:0"><label class="fl">Amount (Rs.) *</label><input class="fi" id="pay-amt" type="number" min="1" placeholder="Enter amount"></div>
+        <div class="fg" style="margin-bottom:0"><label class="fl">Notes</label><input class="fi" id="pay-note" placeholder="Optional notes"></div>
+      </div>
+      <button class="btn-main" id="pay-btn" onclick="recordPayment()">Record Payment →</button>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}})();
+    const custId=new URLSearchParams(location.search).get('id');
+    if(!custId)location.href='customers.html';
+    let customerData=null;
+
+    async function loadCustomer(){
+      try{
+        customerData=await DataService.getCustomer(custId);
+        if(!customerData){toast('Customer not found','error');location.href='customers.html';return}
+        document.getElementById('pf-av').textContent=(customerData.name||'?')[0].toUpperCase();
+        document.getElementById('pf-name').textContent=customerData.name;
+        document.getElementById('pf-phone').textContent=customerData.phone||'No phone';
+        document.getElementById('pf-addr').textContent=customerData.address||'';
+        document.getElementById('pg-title').textContent=customerData.name;
+        document.getElementById('bc-bal').textContent=fmtCur(customerData.balance||0);
+
+        // WhatsApp button
+        document.getElementById('wa-btn').onclick=()=>{
+          const num=(customerData.phone||'').replace(/^0/,'92').replace(/\D/g,'');
+          if(!num){toast('No phone number','warning');return}
+          const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');
+          const msg=`Assalam o Alaikum ${customerData.name},\n\n${shop.name||'Our shop'} has pending Rs. ${(customerData.balance||0).toLocaleString()}.\n\nPlease clear at your earliest.\nThank you! 🙏`;
+          window.open(`https://wa.me/${num}?text=${encodeURIComponent(msg)}`,'_blank');
+        };
+
+        // Load transactions via DataService (no composite index needed)
+        const txns = await DataService.getCustomerTransactions(custId);
+        let totalBiz=0,totalPaid=0;
+        txns.forEach(t=>{if(t.type==='udhaar_added')totalBiz+=t.amount||0;if(t.type==='payment'||t.type==='payment_received')totalPaid+=t.amount||0});
+        document.getElementById('bc-total').textContent=fmtCur(totalBiz);
+        document.getElementById('bc-paid').textContent=fmtCur(totalPaid);
+        renderTxns(txns);
+        
+        // Smart Credit Aging
+        if((customerData.balance||0) > 0) {
+           let sortedTxns = [...txns].sort((a,b) => {
+               const tsA = a.createdAt?.seconds || 0;
+               const tsB = b.createdAt?.seconds || 0;
+               return tsB - tsA; // newest first
+           });
+           
+           let balLeft = customerData.balance || 0;
+           let a30 = 0, a60 = 0, a90 = 0;
+           const now = Date.now();
+           const d30 = 30*24*60*60*1000, d60 = 60*24*60*60*1000;
+           
+           for(let t of sortedTxns) {
+              if(balLeft <= 0) break;
+              if(t.type === 'udhaar_added' || (t.totalAmount && t.paymentMethod==='credit')) {
+                 let amt = t.amount || (t.totalAmount - (t.cashReceived||0));
+                 if(!amt) continue;
+                 let attach = Math.min(amt, balLeft);
+                 balLeft -= attach;
+                 
+                 let ts = t.createdAt?.toDate ? t.createdAt.toDate().getTime() : now;
+                 let age = now - ts;
+                 
+                 if(age <= d30) a30 += attach;
+                 else if(age <= d60) a60 += attach;
+                 else a90 += attach;
+              }
+           }
+           if(balLeft > 0) a90 += balLeft; // Old unaccounted balance spills into deepest bucket
+           
+           document.getElementById('age-0-30').textContent = fmtCur(a30);
+           document.getElementById('age-31-60').textContent = fmtCur(a60);
+           document.getElementById('age-90-plus').textContent = fmtCur(a90);
+           
+           if(a90 > 0) document.getElementById('aging-card').style.borderColor = '#EF4444';
+        } else {
+           document.getElementById('aging-card').style.display = 'none';
+        }
+
+        // --- Deep Customer Insights (AI) ---
+        try {
+           const bSnap = await db.collection('sales').where('shopId','==',getShopId()).where('customerId','==',custId).get();
+           if(bSnap.empty) {
+              document.getElementById('ins-fav').textContent = 'None';
+              document.getElementById('ins-aov').textContent = 'Rs. 0';
+              document.getElementById('ins-freq').textContent = 'New';
+           } else {
+              let totalSpend=0, dates=[], validBills=[];
+              bSnap.forEach(b => {
+                 let d = b.data();
+                 if(!d.deleted) {
+                    totalSpend += (d.totalAmount || d.total || 0);
+                    if(d.createdAt) dates.push(d.createdAt.seconds || 0);
+                    validBills.push(d.id);
+                 }
+              });
+              
+              const aov = validBills.length ? Math.round(totalSpend / validBills.length) : 0;
+              document.getElementById('ins-aov').textContent = fmtCur(aov);
+              
+              if(dates.length > 1) {
+                 dates.sort((a,b)=>a-b);
+                 let totalDays = (dates[dates.length-1] - dates[0]) / (60*60*24);
+                 let avgDays = totalDays / (dates.length - 1);
+                 let freq = 'Rare';
+                 if(avgDays <= 7) freq = 'Weekly 🔥';
+                 else if(avgDays <= 15) freq = 'Bi-Weekly';
+                 else if(avgDays <= 30) freq = 'Monthly 📅';
+                 document.getElementById('ins-freq').textContent = freq;
+              } else {
+                 document.getElementById('ins-freq').textContent = '1 Visit';
+              }
+
+              if(validBills.length > 0) {
+                 const recentIds = validBills.slice(0, 10); // Check up to 10 bills
+                 // Chunk size limit for Firestore "in" queries is 10.
+                 const itemsSnap = await db.collection('sale_items').where('saleId', 'in', recentIds).get();
+                 let freqMap = {};
+                 itemsSnap.forEach(i => {
+                    const d = i.data();
+                    if(d.name) freqMap[d.name] = (freqMap[d.name]||0) + (d.qty||1);
+                 });
+                 let topItem = 'None';
+                 let maxQ = 0;
+                 for(let n in freqMap) { if(freqMap[n] > maxQ) { maxQ = freqMap[n]; topItem = n; } }
+                 document.getElementById('ins-fav').textContent = topItem.length > 15 ? topItem.substring(0,13)+'..' : topItem;
+              } else {
+                 document.getElementById('ins-fav').textContent = 'None';
+              }
+           }
+        } catch(e) { console.warn('Insights fail', e); }
+
+      }catch(e){console.error(e);toast('Load error','error')}
+      finally{document.getElementById('loading').style.display='none'}
+    }
+
+    function renderTxns(txns){
+      const el=document.getElementById('txn-list');
+      if(!txns.length){el.innerHTML='<div style="text-align:center;padding:40px;color:rgba(232,240,247,.3)">No transactions yet</div>';return}
+      el.innerHTML=txns.map(t=>{
+        const isPay=t.type==='payment';
+        const ts=t.createdAt?.toDate?t.createdAt.toDate():new Date(t.createdAt||Date.now());
+        return`<div class="txn-row">
+          <div class="txn-ico" style="background:${isPay?'rgba(16,185,129,.1)':'rgba(245,166,35,.1)'}">${isPay?'💰':'📝'}</div>
+          <div class="txn-info"><div class="txn-name">${isPay?'Payment Received':'Credit Added'}</div><div class="txn-meta">${t.description||''} · ${formatDateTime(ts)}</div></div>
+          <div class="txn-amt" style="color:${isPay?'#34D399':'#F87171'}">${isPay?'-':'+'} ${fmtCur(t.amount)}</div></div>`;
+      }).join('');
+    }
+
+    function openPayModal(){document.getElementById('pay-modal').classList.add('open');document.getElementById('pay-amt').value='';document.getElementById('pay-note').value=''}
+    function closePayModal(){document.getElementById('pay-modal').classList.remove('open')}
+
+    async function recordPayment(){
+      const amt=parseFloat(document.getElementById('pay-amt').value);
+      if(!amt||amt<=0){toast('Enter a valid amount','error');return}
+      const btn=document.getElementById('pay-btn');btn.disabled=true;btn.textContent='Saving...';
+      try{
+        const shopId=getShopId();
+        const batch=db.batch();
+        batch.update(db.collection('customers').doc(custId),{balance:firebase.firestore.FieldValue.increment(-amt),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+        const txRef=db.collection('customer_transactions').doc();
+        batch.set(txRef,{shopId,customerId:custId,type:'payment',amount:amt,description:document.getElementById('pay-note').value.trim()||'Payment received',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+        await batch.commit();
+        toast('Payment recorded!','success');
+        closePayModal();loadCustomer();
+      }catch(e){toast('Failed: '+e.message,'error')}
+      finally{btn.disabled=false;btn.textContent='Record Payment →'}
+    }
+
+    async function delCustomer(){
+      if(!confirm(`Permanently delete "${customerData?.name}"?`))return;
+      try{await DataService.deleteCustomer(custId,customerData?.name);toast('Deleted','success');location.href='customers.html'}
+      catch(e){toast('Failed: '+e.message,'error')}
+    }
+
+    auth.onAuthStateChanged(u=>{if(!u){location.href='login.html';return}loadCustomer()});
+  </script>
+</body>
+</html>

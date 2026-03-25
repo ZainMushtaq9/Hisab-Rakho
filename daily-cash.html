@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Daily Cash — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json"><meta name="theme-color" content="#040D12">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Plus Jakarta Sans',sans-serif;background:#040D12;color:#E8F0F7;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}a{color:inherit;text-decoration:none}button{cursor:pointer;font-family:inherit;border:none;background:none}body.light-mode{background:#F0F4F8;color:#0D1E2E}
+    .sidebar{width:250px;position:fixed;top:0;left:0;bottom:0;background:#071520;border-right:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;z-index:200;overflow:hidden;transition:transform .3s}body.light-mode .sidebar{background:#fff;border-right-color:rgba(0,0,0,.08)}.sb-brand{padding:14px;border-bottom:1px solid rgba(255,255,255,.07)}.sb-logo-row{display:flex;align-items:center;gap:9px;margin-bottom:12px}.sb-logo-icon{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#00C9B1,#009E8E);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}.sb-logo-text{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}.sb-logo-text em{color:#00C9B1;font-style:normal}.sb-shop-chip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:9px}.sb-shop-av{font-size:16px}.sb-shop-name{font-size:12px;font-weight:700}.sb-shop-plan{font-size:10px;font-weight:700;color:#F5A623;margin-top:1px}.sb-nav{flex:1;overflow-y:auto;padding:6px 8px}.sb-nav::-webkit-scrollbar{width:0}.sb-sec-lbl{font-size:9px;font-weight:700;color:rgba(232,240,247,.25);text-transform:uppercase;letter-spacing:.08em;padding:8px 10px 3px}.nav-link{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:9px;font-size:13px;font-weight:500;color:rgba(232,240,247,.55);transition:all .15s;margin-bottom:1px;text-decoration:none}.nav-link:hover{background:rgba(255,255,255,.04);color:#E8F0F7}.nav-link.active{background:rgba(0,201,177,.1);color:#00C9B1;font-weight:600}.nav-ico{font-size:15px;width:20px;text-align:center;flex-shrink:0}.sb-footer{padding:10px;border-top:1px solid rgba(255,255,255,.07)}.upgrade-card{background:linear-gradient(135deg,rgba(0,201,177,.12),rgba(0,158,142,.08));border:1px solid rgba(0,201,177,.2);border-radius:12px;padding:10px 12px;text-align:center}.upgrade-title{font-size:12px;font-weight:700;color:#00C9B1}.upgrade-sub{font-size:10px;color:rgba(232,240,247,.35);margin:2px 0 8px}.upgrade-btn{width:100%;padding:7px;background:linear-gradient(135deg,#00C9B1,#009E8E);border:none;border-radius:8px;color:#040D12;font-size:11px;font-weight:700;cursor:pointer}
+    .main-area{margin-left:250px;min-height:100vh;display:flex;flex-direction:column;flex:1;min-width:0}.topbar{position:sticky;top:0;z-index:300;height:56px;background:rgba(4,13,18,.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;padding:0 20px;gap:12px}body.light-mode .topbar{background:rgba(255,255,255,.95);border-bottom-color:rgba(0,0,0,.08)}.topbar-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700}.topbar-right{display:flex;align-items:center;gap:8px}.icon-btn{width:34px;height:34px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;cursor:pointer;color:inherit}.logout-btn{display:flex;align-items:center;gap:5px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);border-radius:8px;color:#F87171;font-size:12px;font-weight:600;padding:7px 12px;cursor:pointer;white-space:nowrap}.user-pill{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:999px;padding:3px 12px 3px 3px;cursor:pointer}.user-av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#00C9B1,#009E8E);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#040D12}.user-nm{font-size:12px;font-weight:600}.menu-toggle{display:none;width:34px;height:34px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;align-items:center;justify-content:center;font-size:18px;cursor:pointer;color:inherit}.sidebar-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:190}
+    .page-content{padding:20px;max-width:700px;margin:0 auto}
+
+    /* Summary Cards */
+    .cash-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+    .cash-card{background:#0D1E2E;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:16px;text-align:center}body.light-mode .cash-card{background:#fff;border-color:rgba(0,0,0,.08)}
+    .cc-icon{font-size:24px;margin-bottom:6px}.cc-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;margin-bottom:2px}.cc-lbl{font-size:10px;color:rgba(232,240,247,.4);text-transform:uppercase;letter-spacing:.5px}
+
+    /* Opening Cash */
+    .opening-card{background:linear-gradient(135deg,rgba(0,201,177,.06),rgba(0,158,142,.04));border:1px solid rgba(0,201,177,.15);border-radius:14px;padding:18px;display:flex;align-items:center;gap:14px;margin-bottom:16px}
+    .oc-left{flex:1}.oc-title{font-size:14px;font-weight:700;margin-bottom:4px}.oc-sub{font-size:12px;color:rgba(232,240,247,.4)}
+    .oc-right{display:flex;align-items:center;gap:8px}
+    .oc-input{width:120px;background:rgba(255,255,255,.06);border:1px solid rgba(0,201,177,.2);border-radius:8px;color:#00C9B1;font-size:16px;font-weight:700;padding:8px 12px;outline:none;text-align:center;font-family:inherit}
+    .oc-save{padding:8px 14px;background:linear-gradient(135deg,#00C9B1,#009E8E);border:none;border-radius:8px;color:#040D12;font-size:12px;font-weight:700;cursor:pointer}
+
+    /* Transaction List */
+    .panel{background:#0D1E2E;border:1px solid rgba(255,255,255,.07);border-radius:14px;overflow:hidden;margin-bottom:16px}body.light-mode .panel{background:#fff;border-color:rgba(0,0,0,.08)}.panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;font-weight:700}.panel-body{padding:0}
+    .txn-row{display:flex;align-items:center;gap:11px;padding:11px 18px;border-bottom:1px solid rgba(255,255,255,.05)}.txn-row:last-child{border-bottom:none}
+    .txn-ico{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .txn-info{flex:1}.txn-name{font-size:13px;font-weight:600}.txn-meta{font-size:10px;color:rgba(232,240,247,.3)}
+    .txn-amt{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+
+    .close-day-btn{width:100%;padding:14px;background:linear-gradient(135deg,#F5A623,#E89A1C);color:#040D12;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;transition:transform .1s}
+    .close-day-btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(245,166,35,.3)}
+
+    .mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:#071520;border-top:1px solid rgba(255,255,255,.07);z-index:250;padding:4px 0;padding-bottom:env(safe-area-inset-bottom)}body.light-mode .mobile-nav{background:#fff;border-top-color:rgba(0,0,0,.08)}.mob-nav-inner{display:flex;justify-content:space-around}.mob-nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 8px;font-size:10px;font-weight:600;color:rgba(232,240,247,.4);text-decoration:none}.mob-nav-item.active{color:#00C9B1}.mob-nav-icon{font-size:18px}
+    #toast-container{position:fixed;bottom:20px;right:20px;z-index:9999}
+    @media(max-width:768px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.sidebar-overlay.open{display:block}.menu-toggle{display:flex}.main-area{margin-left:0}.mobile-nav{display:block}.page-content{padding:12px;padding-bottom:80px}.cash-grid{grid-template-columns:1fr 1fr;gap:8px}.cc-val{font-size:16px}}
+    @media(max-width:480px){.cash-grid{grid-template-columns:1fr}.opening-card{flex-direction:column;text-align:center}.oc-right{justify-content:center}}
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+  <div style="display:flex;min-height:100vh;width:100%">
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand"><div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div><div class="sb-shop-chip"><div class="sb-shop-av">🛒</div><div><div class="sb-shop-name" id="sb-shop">Shop</div><div class="sb-shop-plan">FREE</div></div></div></div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a><a href="pos.html" class="nav-link"><span class="nav-ico">💳</span>New Sale</a><a href="inventory.html" class="nav-link"><span class="nav-ico">📦</span>Inventory</a><a href="customers.html" class="nav-link"><span class="nav-ico">👥</span>Customers</a><a href="suppliers.html" class="nav-link"><span class="nav-ico">🚚</span>Suppliers</a><a href="bills.html" class="nav-link"><span class="nav-ico">🧾</span>Bills</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">FINANCE</div>
+        <a href="expenses.html" class="nav-link"><span class="nav-ico">💸</span>Expenses</a><a href="daily-cash.html" class="nav-link active"><span class="nav-ico">💰</span>Daily Cash</a><a href="returns.html" class="nav-link"><span class="nav-ico">↩</span>Returns</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">CUSTOMER PORTAL</div>
+        <a href="shop-requests.html" class="nav-link"><span class="nav-ico">🔔</span>Requests</a>
+        
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="settings.html" class="nav-link"><span class="nav-ico">⚙️</span>Settings</a>
+      </nav>
+      <div class="sb-footer"><div class="upgrade-card"><div class="upgrade-title">⚡ Upgrade</div><div class="upgrade-sub">Unlimited features</div><button class="upgrade-btn" onclick="location.href='subscription.html'">Rs. 999/mo →</button></div></div>
+    </aside>
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px"><button class="menu-toggle" onclick="openSidebar()">☰</button><div class="topbar-title">💰 Daily Cash</div></div>
+        <div class="topbar-right"><div class="icon-btn" onclick="toggleTheme()"><span class="theme-toggle-btn">🌙</span></div><div class="user-pill"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div><button class="logout-btn" onclick="signOut()">⏻ Logout</button></div>
+      </div>
+      <div class="page-content">
+        <div style="text-align:center;margin-bottom:16px;font-size:13px;color:rgba(232,240,247,.4)" id="today-label"></div>
+
+        <div class="opening-card">
+          <div class="oc-left"><div class="oc-title">💵 Opening Cash</div><div class="oc-sub">Set how much cash you started with today</div></div>
+          <div class="oc-right"><input class="oc-input" id="opening-cash" type="number" min="0" placeholder="0"><button class="oc-save" onclick="saveOpening()">Save</button></div>
+        </div>
+
+        <div class="cash-grid">
+          <div class="cash-card"><div class="cc-icon">💵</div><div class="cc-val" id="cc-opening" style="color:#93C5FD">Rs. 0</div><div class="cc-lbl">Opening</div></div>
+          <div class="cash-card"><div class="cc-icon">📈</div><div class="cc-val" id="cc-sales" style="color:#34D399">Rs. 0</div><div class="cc-lbl">Cash Sales</div></div>
+          <div class="cash-card"><div class="cc-icon">📉</div><div class="cc-val" id="cc-expenses" style="color:#F87171">Rs. 0</div><div class="cc-lbl">Expenses</div></div>
+          <div class="cash-card"><div class="cc-icon">🏦</div><div class="cc-val" id="cc-expected" style="color:#00C9B1">Rs. 0</div><div class="cc-lbl">Expected</div></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><span>📜 Today's Transactions</span></div>
+          <div class="panel-body" id="txn-list"><div style="text-align:center;padding:40px;color:rgba(232,240,247,.3)">⏳ Loading...</div></div>
+        </div>
+
+        <button class="close-day-btn" onclick="closeDay()">📊 Close Day & Generate Report</button>
+      </div>
+    </div>
+  </div>
+
+  <nav class="mobile-nav"><div class="mob-nav-inner"><a href="dashboard.html" class="mob-nav-item"><span class="mob-nav-icon">🏠</span>Home</a><a href="pos.html" class="mob-nav-item"><span class="mob-nav-icon">➕</span>Sale</a><a href="inventory.html" class="mob-nav-item"><span class="mob-nav-icon">📦</span>Inventory</a><a href="customers.html" class="mob-nav-item"><span class="mob-nav-icon">👥</span>Customers</a><a href="settings.html" class="mob-nav-item"><span class="mob-nav-icon">⚙️</span>More</a></div></nav>
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');const user=JSON.parse(localStorage.getItem('hr_user')||'{}');
+      if(shop.name)document.getElementById('sb-shop').textContent=shop.name;
+      if(user.name){document.getElementById('user-nm').textContent=user.name;document.getElementById('user-av').textContent=(user.name[0]||'U').toUpperCase()}
+    })();
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+
+    const today=new Date();today.setHours(0,0,0,0);
+    const todayStr=today.toISOString().split('T')[0];
+    document.getElementById('today-label').textContent=today.toLocaleDateString('en-PK',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+    let openingCash=0,cashSales=0,totalExpenses=0;
+
+    async function loadDailyData(){
+      const shopId=getShopId();if(!shopId)return;
+      try{
+        // Load opening cash via DataService
+        const dcData = await DataService.getDailyCash(todayStr);
+        if(dcData){
+          openingCash=dcData.openingCash||0;
+          document.getElementById('opening-cash').value=openingCash;
+        }
+        document.getElementById('cc-opening').textContent='Rs. '+openingCash.toLocaleString();
+
+        // Load today's cash sales via DataService (client-side date filter)
+        const allSales = await DataService.getBills(500);
+        cashSales=0;
+        const txns=[];
+        allSales.forEach(s=>{
+          const ts=s.createdAt?.toDate?s.createdAt.toDate():new Date(s.createdAt||0);
+          if(ts>=today && (s.paymentType==='cash'||s.paymentType==='card')){
+            cashSales+=(s.totalAmount||s.total||0);
+            txns.push({type:'sale',name:s.customerName||'Walk-in',amount:s.totalAmount||s.total||0,time:s.createdAt});
+          }
+        });
+        document.getElementById('cc-sales').textContent='Rs. '+cashSales.toLocaleString();
+
+        // Load today's expenses via DataService
+        const allExp = await DataService.getExpenses(500);
+        totalExpenses=0;
+        allExp.forEach(e=>{
+          const ts=e.createdAt?.toDate?e.createdAt.toDate():new Date(e.createdAt||0);
+          if(ts>=today){
+            totalExpenses+=(e.amount||0);
+            txns.push({type:'expense',name:e.description||'Expense',amount:e.amount||0,time:e.createdAt});
+          }
+        });
+        document.getElementById('cc-expenses').textContent='Rs. '+totalExpenses.toLocaleString();
+        const expected=openingCash+cashSales-totalExpenses;
+        document.getElementById('cc-expected').textContent='Rs. '+expected.toLocaleString();
+        txns.sort((a,b)=>{const at=a.time?.toDate?a.time.toDate():new Date(0);const bt=b.time?.toDate?b.time.toDate():new Date(0);return bt-at});
+        renderTxns(txns);
+      }catch(e){console.error(e);toast('Load error','error')}
+    }
+
+    function renderTxns(txns){
+      const el=document.getElementById('txn-list');
+      if(!txns.length){el.innerHTML='<div style="text-align:center;padding:40px;color:rgba(232,240,247,.3)">No transactions today</div>';return}
+      el.innerHTML=txns.map(t=>{
+        const isSale=t.type==='sale';
+        const ts=t.time?.toDate?t.time.toDate():new Date();
+        return`<div class="txn-row">
+          <div class="txn-ico" style="background:${isSale?'rgba(16,185,129,.1)':'rgba(239,68,68,.1)'}">${isSale?'💵':'💸'}</div>
+          <div class="txn-info"><div class="txn-name">${t.name}</div><div class="txn-meta">${isSale?'Cash Sale':'Expense'} · ${ts.toLocaleTimeString('en-PK',{hour:'2-digit',minute:'2-digit'})}</div></div>
+          <div class="txn-amt" style="color:${isSale?'#34D399':'#F87171'}">${isSale?'+':'-'} Rs. ${t.amount.toLocaleString()}</div></div>`;
+      }).join('');
+    }
+
+    async function saveOpening(){
+      const val=parseFloat(document.getElementById('opening-cash').value)||0;
+      const shopId=getShopId();if(!shopId)return;
+      try{
+        await db.collection('daily_cash').doc(`${shopId}_${todayStr}`).set({shopId,date:todayStr,openingCash:val,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+        openingCash=val;
+        document.getElementById('cc-opening').textContent='Rs. '+val.toLocaleString();
+        const expected=openingCash+cashSales-totalExpenses;
+        document.getElementById('cc-expected').textContent='Rs. '+expected.toLocaleString();
+        toast('Opening cash saved!','success');
+      }catch(e){toast('Save failed: '+e.message,'error')}
+    }
+
+    async function closeDay(){
+      if(!confirm('Close today and generate a daily report?'))return;
+      const shopId=getShopId();if(!shopId)return;
+      const expected=openingCash+cashSales-totalExpenses;
+      try{
+        await db.collection('daily_cash').doc(`${shopId}_${todayStr}`).set({
+          shopId,date:todayStr,openingCash,cashSales,totalExpenses,expectedCash:expected,closedAt:firebase.firestore.FieldValue.serverTimestamp(),status:'closed'
+        },{merge:true});
+        // Share report
+        const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');
+        const report=`📊 Daily Cash Report\n🏪 ${shop.name||''}\n📅 ${today.toLocaleDateString('en-PK')}\n\n💵 Opening: Rs. ${openingCash.toLocaleString()}\n📈 Cash Sales: Rs. ${cashSales.toLocaleString()}\n📉 Expenses: Rs. ${totalExpenses.toLocaleString()}\n💰 Expected: Rs. ${expected.toLocaleString()}`;
+        if(navigator.share){await navigator.share({title:'Daily Cash Report',text:report})}
+        else{navigator.clipboard.writeText(report);toast('Report copied!','success')}
+        toast('Day closed!','success');
+      }catch(e){toast('Failed: '+e.message,'error')}
+    }
+
+    auth.onAuthStateChanged(u=>{if(!u){location.href='login.html';return}loadDailyData()});
+  </script>
+</body>
+</html>

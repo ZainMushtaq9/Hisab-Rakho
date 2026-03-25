@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Point of Sale — Hisab Rakho</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#040D12">
+  <link rel="stylesheet" href="assets/css/shared.css">
+  <style>
+    /* ── POS LAYOUT SPECIFIC ── */
+    .pos-layout{display:grid;grid-template-columns:1fr 380px;gap:0;flex:1}
+    .pos-products{padding:20px;overflow-y:auto}
+    .pos-cart{background:var(--bg-panel);border-left:1px solid var(--border);display:flex;flex-direction:column;height:calc(100vh - 56px)}
+    
+    /* Product Grid */
+    .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+    .prod-card{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:14px;cursor:pointer;transition:all .15s;text-align:center}
+    .prod-card:hover{border-color:var(--border-teal);transform:translateY(-2px)}
+    .prod-card:active{transform:scale(.97)}
+    .prod-emoji{font-size:28px;margin-bottom:8px}
+    .prod-name{font-size:12px;font-weight:600;margin-bottom:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .prod-price{font-size:14px;font-weight:700;color:var(--teal)}
+    .prod-stock{font-size:10px;color:var(--tx-muted);margin-top:2px}
+
+    /* Cart */
+    .cart-header{padding:16px;border-bottom:1px solid var(--border);font-family:var(--font-display);font-size:16px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+    .cart-items{flex:1;overflow-y:auto;padding:8px 0}
+    .cart-item{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.04)}
+    body.light-mode .cart-item{border-bottom-color:rgba(0,0,0,.04)}
+    .cart-item:last-child{border-bottom:none}
+    .ci-info{flex:1;min-width:0}
+    .ci-name{font-size:13px;font-weight:600;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+    .ci-price{font-size:11px;color:var(--tx-muted);display:flex;align-items:center;margin-top:2px}
+    .ci-price input{width:54px;background:transparent;border:1px solid var(--border-med);border-radius:4px;color:inherit;padding:2px 4px;font-size:11px;font-family:inherit;outline:none;margin-left:4px}
+    body.light-mode .ci-price input{border-color:rgba(0,0,0,.15);color:var(--tx-primary)}
+    .ci-price input:focus{border-color:var(--teal)}
+    .ci-qty{display:flex;align-items:center;gap:6px}
+    .ci-qty button{width:26px;height:26px;border-radius:6px;background:var(--bg-hover);border:1px solid var(--border);color:var(--tx-primary);font-size:14px;display:flex;align-items:center;justify-content:center}
+    .ci-qty input{width:44px;background:transparent;border:1px solid var(--border-med);border-radius:4px;color:inherit;padding:2px;font-size:13px;font-weight:700;font-family:inherit;text-align:center;outline:none}
+    body.light-mode .ci-qty input{border-color:rgba(0,0,0,.15);color:var(--tx-primary)}
+    .ci-qty input:focus{border-color:var(--teal)}
+    .ci-total{font-size:13px;font-weight:700;color:var(--teal);min-width:60px;text-align:right}
+    .ci-del{color:#F87171;font-size:14px;cursor:pointer;padding:4px}
+
+    /* Cart Footer */
+    .cart-footer{padding:16px;border-top:1px solid var(--border)}
+    .cf-row{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px}
+    .cf-row.total{font-size:16px;font-weight:700;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+    .cf-row.total .cf-val{color:var(--teal)}
+    .cf-discount{display:flex;align-items:center;gap:8px;margin:8px 0}
+    .cf-discount input{flex:1;background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;color:var(--tx-primary);padding:8px;font-size:13px;outline:none;font-family:inherit}
+    .pay-methods{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+    .pay-btn{padding:8px;border-radius:8px;font-size:11px;font-weight:700;text-align:center;cursor:pointer;transition:all .15s;border:2px solid transparent}
+    .pay-btn.cash{background:rgba(16,185,129,.1);color:#34D399;border-color:rgba(16,185,129,.2)}
+    .pay-btn.card{background:rgba(59,130,246,.1);color:#93C5FD;border-color:rgba(59,130,246,.2)}
+    .pay-btn.udhaar{background:var(--gold-dim);color:var(--gold);border-color:rgba(245,166,35,.2)}
+    .pay-btn.mixed{background:var(--bg-hover);color:var(--tx-primary);border-color:var(--border)}
+    .pay-btn.selected{box-shadow:0 0 0 2px var(--teal);border-color:var(--teal)}
+    .cust-select{margin:8px 0}
+    .cust-select select{width:100%;background:var(--bg-hover);border:1px solid var(--border);border-radius:8px;color:var(--tx-primary);padding:8px 12px;font-size:13px;outline:none;font-family:inherit;appearance:none}
+    .cust-select select option{background:var(--bg-panel)}
+    
+    .btn-checkout{width:100%;padding:14px;background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#040D12;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;transition:transform .1s,box-shadow .15s}
+    .btn-checkout:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,201,177,.35)}
+    .btn-checkout:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    
+    .cart-toggle-fab{display:none;position:fixed;bottom:80px;right:16px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#040D12;font-size:20px;font-weight:700;z-index:251;box-shadow:0 4px 20px rgba(0,201,177,.4);align-items:center;justify-content:center}
+    .cart-count-badge{position:absolute;top:-4px;right:-4px;background:#EF4444;color:#fff;font-size:10px;font-weight:700;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+
+    @media(max-width:768px){
+      .pos-layout{grid-template-columns:1fr}
+      .pos-cart{position:fixed;inset:0;z-index:400;transform:translateX(100%);transition:transform .3s}
+      .pos-cart.open{transform:translateX(0)}
+      .cart-toggle-fab{display:flex}
+      .pos-products{padding:12px;padding-bottom:140px}
+      .prod-grid{grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+    }
+  </style>
+
+  <script>if(JSON.parse(localStorage.getItem('hr_user')||'{}').role === 'customer') location.href='customer-dashboard.html';</script>
+</head>
+<body>
+
+  <div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
+  <div style="display:flex;min-height:100vh">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sb-brand">
+        <div class="sb-logo-row"><div class="sb-logo-icon">🏪</div><div class="sb-logo-text">Hisab <em>Rakho</em></div></div>
+        <div class="sb-shop-chip"><div class="sb-shop-av">🛒</div><div><div class="sb-shop-name" id="sb-shop">Shop</div><div class="sb-shop-plan">FREE</div></div></div>
+      </div>
+      <nav class="sb-nav">
+        <div class="sb-sec-lbl">MAIN</div>
+        <a href="dashboard.html" class="nav-link"><span class="nav-ico">🏠</span>Dashboard</a>
+        <a href="pos.html" class="nav-link active"><span class="nav-ico">💳</span>New Sale / POS</a>
+        <a href="inventory.html" class="nav-link"><span class="nav-ico">📦</span>Inventory</a>
+        <a href="customers.html" class="nav-link"><span class="nav-ico">👥</span>Customers</a>
+        <a href="suppliers.html" class="nav-link"><span class="nav-ico">🚚</span>Suppliers</a>
+        <a href="bills.html" class="nav-link"><span class="nav-ico">🧾</span>Bills</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">FINANCE</div>
+        <a href="expenses.html" class="nav-link"><span class="nav-ico">💸</span>Expenses</a>
+        <a href="daily-cash.html" class="nav-link"><span class="nav-ico">💰</span>Daily Cash</a>
+        <a href="returns.html" class="nav-link"><span class="nav-ico">↩</span>Returns</a>
+        <div class="sb-sec-lbl" style="margin-top:10px">CUSTOMER PORTAL</div>
+        <a href="shop-requests.html" class="nav-link"><span class="nav-ico">🔔</span>Requests</a>
+        
+        <div class="sb-sec-lbl" style="margin-top:10px">SETTINGS</div>
+        <a href="settings.html" class="nav-link"><span class="nav-ico">⚙️</span>Settings</a>
+      </nav>
+      <div class="sb-footer">
+        <div class="upgrade-card"><div class="upgrade-title">⚡ Upgrade to Pro</div><div class="upgrade-sub">Unlimited products</div><button class="upgrade-btn" onclick="location.href='subscription.html'">Rs. 999/mo →</button></div>
+      </div>
+    </aside>
+
+    <div class="main-area">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="menu-toggle" onclick="openSidebar()">☰</button>
+          <div class="topbar-title">💳 Point of Sale</div>
+        </div>
+        <div class="topbar-right">
+          <div class="icon-btn" onclick="toggleTheme()"><span class="theme-toggle-btn">🌙</span></div>
+          <div class="user-pill" onclick="location.href='settings.html'"><div class="user-av" id="user-av">U</div><div class="user-nm" id="user-nm">User</div></div>
+          <button class="logout-btn" onclick="signOut()">⏻ Logout</button>
+        </div>
+      </div>
+
+      <div class="pos-layout">
+        <!-- PRODUCTS -->
+        <div class="pos-products">
+          <div class="search-bar">
+            <span class="s-icon">🔍</span>
+            <input type="text" id="prod-search" placeholder="Search products by name or barcode..." oninput="filterProducts()">
+          </div>
+          <div class="prod-grid" id="prod-grid">
+            <div style="grid-column:1/-1;text-align:center;padding:60px;color:rgba(232,240,247,.3)">⏳ Loading products...</div>
+          </div>
+        </div>
+
+        <!-- CART -->
+        <div class="pos-cart" id="pos-cart">
+          <div class="cart-header">
+            <span>🛒 Cart</span>
+            <span id="cart-count" style="font-size:13px;color:rgba(232,240,247,.4)">0 items</span>
+            <button onclick="closeCart()" style="display:none;font-size:20px;color:rgba(232,240,247,.5)" class="cart-close-btn">✕</button>
+          </div>
+          <div class="cart-items" id="cart-items">
+            <div class="empty-cart"><div class="ec-icon">🛒</div>Cart is empty<br><span style="font-size:11px;color:rgba(232,240,247,.2)">Tap products to add</span></div>
+          </div>
+          <div class="cart-footer" id="cart-footer" style="display:none">
+            <div class="cf-row"><span>Subtotal</span><span class="cf-val" id="cf-subtotal">Rs. 0</span></div>
+            <div class="cf-discount"><span style="font-size:12px;white-space:nowrap">Discount:</span><input type="number" id="discount-inp" placeholder="0" min="0" oninput="updateTotals()"></div>
+            <div class="cf-row total"><span>Total</span><span class="cf-val" id="cf-total">Rs. 0</span></div>
+
+            <div class="pay-methods">
+              <div class="pay-btn cash selected" onclick="selectPay('cash',this)">💵 Cash</div>
+              <div class="pay-btn card" onclick="selectPay('card',this)">💳 Card</div>
+              <div class="pay-btn udhaar" onclick="selectPay('udhaar',this)">📝 Credit</div>
+              <div class="pay-btn mixed" onclick="selectPay('mixed',this)">🔄 Mixed</div>
+            </div>
+
+            <div id="adv-pay-settings" style="display:none;margin:10px 0;padding:12px;background:var(--bg-hover);border-radius:10px;border:1px solid var(--border)">
+              <!-- Mixed -->
+              <div id="adv-mixed" style="display:none">
+                <div style="font-size:11px;font-weight:700;margin-bottom:8px;color:var(--tx-muted)">Partial Payment Setup</div>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <span style="font-size:12px;font-weight:600;white-space:nowrap;width:85px;color:var(--tx-secondary)">Cash Rcvd:</span>
+                  <input type="number" id="mix-cash" placeholder="Rs. 0" min="0" oninput="calcRemaining()" style="flex:1;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--tx-primary);padding:6px;font-size:13px;outline:none;font-family:inherit">
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding-top:4px;border-top:1px dashed var(--border)">
+                  <span style="font-size:12px;font-weight:600;color:var(--tx-secondary)">Remaining Credit:</span>
+                  <span id="mix-remaining" style="color:var(--gold);font-weight:700;font-size:14px">Rs. 0</span>
+                </div>
+              </div>
+              <!-- Udhaar -->
+              <div id="adv-udhaar" style="display:none">
+                <div style="font-size:11px;font-weight:700;margin-bottom:8px;color:var(--tx-muted)">💳 Credit / Installment Setup</div>
+
+                <!-- Advance type toggle -->
+                <div style="display:flex;gap:6px;margin-bottom:8px">
+                  <label style="flex:1;display:flex;align-items:center;gap:5px;background:rgba(0,201,177,.08);border:1px solid rgba(0,201,177,.2);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:12px;font-weight:600">
+                    <input type="radio" name="adv-type" id="adv-type-pct" value="%" checked onchange="calcUdhaarPreview()" style="accent-color:#00C9B1"> % Advance
+                  </label>
+                  <label style="flex:1;display:flex;align-items:center;gap:5px;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.2);border-radius:6px;padding:5px 8px;cursor:pointer;font-size:12px;font-weight:600">
+                    <input type="radio" name="adv-type" id="adv-type-rs" value="Rs" onchange="calcUdhaarPreview()" style="accent-color:#F5A623"> Rs. Advance
+                  </label>
+                </div>
+
+                <!-- Quick % chips -->
+                <div id="adv-pct-chips" style="display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap">
+                  <span style="font-size:10px;color:var(--tx-muted);display:flex;align-items:center">Quick:</span>
+                  <button type="button" onclick="setAdvPct(10)" style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--tx-secondary);cursor:pointer">10%</button>
+                  <button type="button" onclick="setAdvPct(20)" style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--tx-secondary);cursor:pointer">20%</button>
+                  <button type="button" onclick="setAdvPct(25)" style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--tx-secondary);cursor:pointer">25%</button>
+                  <button type="button" onclick="setAdvPct(30)" style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--tx-secondary);cursor:pointer">30%</button>
+                  <button type="button" onclick="setAdvPct(50)" style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:var(--tx-secondary);cursor:pointer">50%</button>
+                </div>
+
+                <!-- Advance input -->
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <span id="adv-input-label" style="font-size:12px;font-weight:600;white-space:nowrap;width:85px;color:var(--tx-secondary)">Advance %:</span>
+                  <input type="number" id="udh-advance" placeholder="0" min="0" step="any" oninput="calcUdhaarPreview()" style="flex:1;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--tx-primary);padding:6px;font-size:13px;outline:none;font-family:inherit">
+                </div>
+
+                <!-- Live preview -->
+                <div id="udh-preview" style="display:none;background:rgba(0,201,177,.05);border:1px solid rgba(0,201,177,.12);border-radius:8px;padding:8px 10px;margin-bottom:8px">
+                  <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+                    <span style="color:var(--tx-secondary)">✅ Advance Paid:</span>
+                    <span id="udh-preview-adv" style="font-weight:700;color:#34D399">Rs. 0</span>
+                  </div>
+                  <div style="display:flex;justify-content:space-between;font-size:12px">
+                    <span style="color:var(--tx-secondary)">📝 Credit Remaining:</span>
+                    <span id="udh-preview-credit" style="font-weight:700;color:#F87171">Rs. 0</span>
+                  </div>
+                </div>
+
+                <!-- Installments & Markup -->
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+                  <span style="font-size:12px;font-weight:600;white-space:nowrap;width:85px;color:var(--tx-secondary)">Installments:</span>
+                  <input type="number" id="udh-inst" value="1" min="1" step="1" style="flex:1;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--tx-primary);padding:6px;font-size:13px;outline:none;font-family:inherit">
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span style="font-size:12px;font-weight:600;white-space:nowrap;width:85px;color:var(--tx-secondary)">Markup:</span>
+                  <select id="udh-markup-type" style="background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--tx-primary);padding:6px;font-size:13px;outline:none;font-family:inherit">
+                    <option value="%">%</option>
+                    <option value="Rs">Rs.</option>
+                  </select>
+                  <input type="number" id="udh-markup-val" value="0" min="0" step="any" style="flex:1;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--tx-primary);padding:6px;font-size:13px;outline:none;font-family:inherit">
+                </div>
+              </div>
+            </div>
+
+            <div class="cust-select">
+              <div style="display:flex;gap:6px">
+                <select id="cust-sel" style="flex:1;background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;color:var(--tx-primary);padding:11px 14px;font-size:14px;outline:none;font-family:inherit;appearance:none"><option value="">Walk-in Customer</option></select>
+                <button onclick="toggleQuickCust()" style="background:rgba(0,201,177,.1);color:#00C9B1;border:1px solid rgba(0,201,177,.2);border-radius:10px;padding:0 12px;font-size:13px;font-weight:700;white-space:nowrap;transition:all .15s">➕ New</button>
+              </div>
+            </div>
+
+            <div id="quick-cust-form" style="display:none;margin-top:10px;padding:12px;background:var(--bg-hover);border-radius:10px;border:1px solid var(--border)">
+              <div style="font-size:11px;font-weight:700;margin-bottom:8px;color:var(--tx-muted)">Quick Add Customer</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <input type="text" id="qc-name" placeholder="Full Name *" style="width:100%;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--tx-primary);padding:8px 10px;font-size:13px;outline:none;font-family:inherit">
+                <input type="tel" id="qc-phone" placeholder="Phone (optional)" style="width:100%;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;color:var(--tx-primary);padding:8px 10px;font-size:13px;outline:none;font-family:inherit">
+                <button onclick="saveQuickCust()" style="width:100%;padding:9px;background:linear-gradient(135deg,#00C9B1,#009E8E);border:none;border-radius:6px;color:#040D12;font-size:12px;font-weight:700;cursor:pointer">Save & Select</button>
+              </div>
+            </div>
+
+            <button class="btn-checkout" id="checkout-btn" onclick="doCheckout()">Complete Sale →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MOBILE CART FAB -->
+  <button class="cart-toggle-fab" id="cart-fab" onclick="openCart()">🛒<span class="cart-count-badge" id="fab-count" style="display:none">0</span></button>
+
+  <!-- Mobile nav -->
+  <nav class="mobile-nav">
+    <div class="mob-nav-inner">
+      <a href="dashboard.html" class="mob-nav-item"><span class="mob-nav-icon">🏠</span>Home</a>
+      <a href="pos.html" class="mob-nav-item active"><span class="mob-nav-icon">➕</span>Sale</a>
+      <a href="inventory.html" class="mob-nav-item"><span class="mob-nav-icon">📦</span>Inventory</a>
+      <a href="customers.html" class="mob-nav-item"><span class="mob-nav-icon">👥</span>Customers</a>
+      <a href="settings.html" class="mob-nav-item"><span class="mob-nav-icon">⚙️</span>More</a>
+    </div>
+  </nav>
+
+  <div id="toast-container"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/utils.js"></script>
+  <script src="assets/js/data-service.js"></script>
+
+  <script>
+    (function(){if(localStorage.getItem('hr_theme')==='light'){document.body.classList.add('light-mode');document.querySelectorAll('.theme-toggle-btn').forEach(b=>b.textContent='☀️')}})();
+
+    function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('sb-overlay').classList.add('open')}
+    function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open')}
+    function openCart(){document.getElementById('pos-cart').classList.add('open')}
+    function closeCart(){document.getElementById('pos-cart').classList.remove('open')}
+
+    // Init sidebar
+    (function(){
+      const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');
+      const user=JSON.parse(localStorage.getItem('hr_user')||'{}');
+      if(shop.name)document.getElementById('sb-shop').textContent=shop.name;
+      if(user.name){document.getElementById('user-nm').textContent=user.name;document.getElementById('user-av').textContent=(user.name[0]||'U').toUpperCase()}
+      // Show close button on mobile
+      if(window.innerWidth<=768)document.querySelector('.cart-close-btn').style.display='block';
+    })();
+
+    let allProducts = [];
+    let cart = [];
+    let paymentType = 'cash';
+
+    // Load products
+    async function loadProducts(){
+      const shopId=getShopId();
+      if(!shopId)return;
+      try{
+        allProducts=await DataService.getProducts();
+        renderProducts(allProducts);
+      }catch(e){console.error('Products load error:',e);toast('Failed to load products','error')}
+    }
+
+    // Load customers for dropdown
+    async function loadCustomers(){
+      const shopId=getShopId();
+      if(!shopId)return;
+      try{
+        const customers=await DataService.getCustomers();
+        const sel=document.getElementById('cust-sel');
+        sel.innerHTML='<option value="">Walk-in Customer</option>';
+        customers.forEach(c => {
+          sel.innerHTML+=`<option value="${c.id}" data-name="${c.name}">${c.name}${c.phone?' ('+c.phone+')':''}</option>`;
+        });
+      }catch(e){console.warn('Customers load error:',e)}
+    }
+
+    function renderProducts(prods){
+      const grid=document.getElementById('prod-grid');
+      if(!prods.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;color:rgba(232,240,247,.3)"><div style="font-size:48px;margin-bottom:12px">📦</div>No products found.<br><a href="inventory-add.html" style="color:#00C9B1;font-weight:600">Add your first product →</a></div>';return}
+      grid.innerHTML=prods.map(p=>`
+        <div class="prod-card" onclick="addToCart('${p.id}')">
+          <div class="prod-emoji">📦</div>
+          <div class="prod-name">${p.name}</div>
+          <div class="prod-price">Rs. ${(p.salePrice||0).toLocaleString()}</div>
+          <div class="prod-stock">${p.stock||0} ${p.unit||'pcs'} in stock</div>
+        </div>`).join('');
+    }
+
+    function filterProducts(){
+      const q=document.getElementById('prod-search').value.toLowerCase().trim();
+      if(!q){renderProducts(allProducts);return}
+      renderProducts(allProducts.filter(p=>(p.name||'').toLowerCase().includes(q)||(p.barcode||'').toLowerCase().includes(q)));
+    }
+
+    function addToCart(productId){
+      const product=allProducts.find(p=>p.id===productId);
+      if(!product)return;
+      const existing=cart.find(c=>c.productId===productId);
+      if(existing){
+        if(existing.qty>=(product.stock||999)){toast('Not enough stock','warning');return}
+        existing.qty++;
+        existing.total=existing.qty*existing.salePrice;
+      }else{
+        cart.push({productId:product.id,name:product.name,qty:1,salePrice:product.salePrice||0,purchasePrice:product.purchasePrice||0,total:product.salePrice||0,unit:product.unit||'pcs'});
+      }
+      renderCart();
+    }
+
+    function removeFromCart(idx){cart.splice(idx,1);renderCart()}
+
+    function toggleQuickCust(){
+      const f=document.getElementById('quick-cust-form');
+      f.style.display=f.style.display==='none'?'block':'none';
+      if(f.style.display==='block')document.getElementById('qc-name').focus();
+    }
+
+    async function saveQuickCust(){
+      const name=document.getElementById('qc-name').value.trim();
+      const phone=document.getElementById('qc-phone').value.trim();
+      if(!name) { toast('Name is required','warning'); return; }
+      try{
+        const newId = await DataService.saveCustomer({name, phone, balance:0});
+        toast('Customer saved!','success');
+        document.getElementById('qc-name').value='';
+        document.getElementById('qc-phone').value='';
+        toggleQuickCust();
+        const allCust=await DataService.getCustomers();
+        const sel=document.getElementById('cust-sel');
+        sel.innerHTML='<option value="">Walk-in Customer</option>'+allCust.map(c=>`<option value="${c.id}">${c.name} ${c.phone?(`(${c.phone})`):''}</option>`).join('');
+        sel.value=newId;
+      }catch(e){toast(e.message,'error')}
+    }
+
+    function changeQty(idx,delta){
+      cart[idx].qty=Math.max(0.001,cart[idx].qty+delta);
+      cart[idx].total=cart[idx].qty*cart[idx].salePrice;
+      renderCart();
+    }
+
+    function setQty(idx,val){
+      cart[idx].qty=Math.max(0.001,parseFloat(val)||1);
+      cart[idx].total=cart[idx].qty*cart[idx].salePrice;
+      renderCart();
+    }
+
+    function updateItemPrice(idx,val){
+      cart[idx].salePrice=parseFloat(val)||0;
+      cart[idx].total=cart[idx].qty*cart[idx].salePrice;
+      renderCart();
+    }
+
+    function renderCart(){
+      const items=document.getElementById('cart-items');
+      const footer=document.getElementById('cart-footer');
+      document.getElementById('cart-count').textContent=cart.length+' items';
+      const fabCount=document.getElementById('fab-count');
+      if(cart.length>0){fabCount.style.display='flex';fabCount.textContent=cart.length}else{fabCount.style.display='none'}
+
+      if(!cart.length){
+        items.innerHTML='<div class="empty-cart"><div class="ec-icon">🛒</div>Cart is empty<br><span style="font-size:11px;color:rgba(232,240,247,.2)">Tap products to add</span></div>';
+        footer.style.display='none';return;
+      }
+      footer.style.display='block';
+      items.innerHTML=cart.map((c,i)=>`
+        <div class="cart-item">
+          <div class="ci-info">
+            <div class="ci-name">${c.name}</div>
+            <div class="ci-price">Rs. <input type="number" step="any" value="${c.salePrice}" onchange="updateItemPrice(${i},this.value)"></div>
+          </div>
+          <div class="ci-qty">
+            <button onclick="changeQty(${i},-1)">−</button>
+            <input type="number" step="any" value="${c.qty}" onchange="setQty(${i},this.value)">
+            <button onclick="changeQty(${i},1)">+</button>
+          </div>
+          <div class="ci-total" style="display:flex;align-items:center;gap:2px">
+            <span style="font-size:11px;color:rgba(232,240,247,0.4)">Rs.</span>
+            <input type="number" step="any" value="${c.total.toFixed(2).replace(/\.00$/,'')}" onchange="setTotal(${i},this.value)" style="width:60px;background:rgba(255,255,255,0.05);border:1px solid rgba(0,201,177,0.2);border-radius:4px;color:var(--gold);font-family:var(--font-display);font-size:14px;font-weight:700;padding:2px 4px;text-align:right;outline:none">
+          </div>
+          <div class="ci-del" onclick="removeFromCart(${i})">🗑</div>
+        </div>`).join('');
+      updateTotals();
+    }
+
+    function calcRemaining(){
+      const subtotal=cart.reduce((s,c)=>s+c.total,0);
+      const discount=parseFloat(document.getElementById('discount-inp')?.value)||0;
+      const total=Math.max(0,subtotal-discount);
+      const cashRec=parseFloat(document.getElementById('mix-cash')?.value)||0;
+      const remain=Math.max(0,total-cashRec);
+      const mr=document.getElementById('mix-remaining');
+      if(mr) mr.textContent='Rs. '+remain.toLocaleString();
+    }
+
+    function calcUdhaarPreview(){
+      const subtotal=cart.reduce((s,c)=>s+c.total,0);
+      const discount=parseFloat(document.getElementById('discount-inp')?.value)||0;
+      const total=Math.max(0,subtotal-discount);
+      const isRs=document.getElementById('adv-type-rs')?.checked;
+      const val=parseFloat(document.getElementById('udh-advance')?.value)||0;
+      // Update label
+      const lbl=document.getElementById('adv-input-label');
+      const chips=document.getElementById('adv-pct-chips');
+      if(lbl) lbl.textContent=isRs?'Advance Rs.:':'Advance %:';
+      if(chips) chips.style.display=isRs?'none':'flex';
+      let advance=isRs?val:total*(val/100);
+      advance=Math.min(advance,total);
+      const credit=Math.max(0,total-advance);
+      const prev=document.getElementById('udh-preview');
+      if(prev){
+        if(val>0){
+          prev.style.display='block';
+          document.getElementById('udh-preview-adv').textContent='Rs. '+advance.toLocaleString('en-PK',{maximumFractionDigits:0});
+          document.getElementById('udh-preview-credit').textContent='Rs. '+credit.toLocaleString('en-PK',{maximumFractionDigits:0});
+        } else {
+          prev.style.display='none';
+        }
+      }
+    }
+
+    function setAdvPct(pct){
+      document.getElementById('adv-type-pct').checked=true;
+      document.getElementById('udh-advance').value=pct;
+      calcUdhaarPreview();
+    }
+
+    function updateTotals(){
+      const subtotal=cart.reduce((s,c)=>s+c.total,0);
+      const discount=parseFloat(document.getElementById('discount-inp')?.value)||0;
+      const total=Math.max(0,subtotal-discount);
+      document.getElementById('cf-subtotal').textContent='Rs. '+subtotal.toLocaleString();
+      document.getElementById('cf-total').textContent='Rs. '+total.toLocaleString();
+      calcRemaining();
+    }
+
+    function selectPay(type,el){
+      paymentType=type;
+      document.querySelectorAll('.pay-btn').forEach(b=>b.classList.remove('selected'));
+      el.classList.add('selected');
+      
+      const advBox=document.getElementById('adv-pay-settings');
+      const mixBox=document.getElementById('adv-mixed');
+      const udhBox=document.getElementById('adv-udhaar');
+      
+      if(type==='mixed'){
+        advBox.style.display='block';mixBox.style.display='block';udhBox.style.display='none';
+        calcRemaining();
+      }else if(type==='udhaar'){
+        advBox.style.display='block';mixBox.style.display='none';udhBox.style.display='block';
+      }else{
+        advBox.style.display='none';
+      }
+      document.querySelector('.cust-select').style.display='block';
+    }
+
+    async function doCheckout(){
+      if(!cart.length){toast('Cart is empty','error');return}
+      const btn=document.getElementById('checkout-btn');
+      btn.disabled=true;btn.textContent='Processing...';
+
+      try{
+        const shopId=getShopId();
+        const shop=JSON.parse(localStorage.getItem('hr_shop')||'{}');
+        const subtotal=cart.reduce((s,c)=>s+c.total,0);
+        const discount=parseFloat(document.getElementById('discount-inp')?.value)||0;
+        const total=Math.max(0,subtotal-discount);
+        const custSel=document.getElementById('cust-sel');
+        const customerId=custSel.value||null;
+        const customerName=customerId?custSel.options[custSel.selectedIndex].dataset.name:'Walk-in';
+
+        if(!customerId && (paymentType==='mixed' || paymentType==='udhaar')){
+          toast('Please select a specific customer to record this Udhaar!','error');
+          btn.disabled=false;btn.textContent='Complete Sale →';
+          return;
+        }
+
+        // --- SMART CREDIT SYSTEM WARNING ---
+        if(customerId && (paymentType==='mixed' || paymentType==='udhaar')){
+           try {
+              const cDoc = await db.collection('shops').doc(shopId).collection('customers').doc(customerId).get();
+              if(cDoc.exists && (cDoc.data().balance || 0) > 0){
+                 const txns = await DataService.getCustomerTransactions(customerId);
+                 let balLeft = cDoc.data().balance;
+                 let agedAmount = 0;
+                 const now = Date.now();
+                 const threshold = 60 * 24 * 60 * 60 * 1000; // 60 Days
+                 
+                 let sortedTxns = [...txns].sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
+                 for(let t of sortedTxns){
+                    if(balLeft<=0) break;
+                    if(t.type==='udhaar_added' || (t.totalAmount && t.paymentMethod==='credit')){
+                       let amt = t.amount || (t.totalAmount - (t.cashReceived||0));
+                       if(!amt) continue;
+                       let attach = Math.min(amt, balLeft);
+                       balLeft -= attach;
+                       let age = now - (t.createdAt?.toDate ? t.createdAt.toDate().getTime() : now);
+                       if(age > threshold) agedAmount += attach;
+                   }
+                 }
+                 if(balLeft > 0) agedAmount += balLeft;
+                 
+                 if(agedAmount > 0) {
+                    if(!confirm(`⚠️ SMART CREDIT ALERT ⚠️\n\n${customerName} has Rs. ${agedAmount.toLocaleString()} in dues older than 60 days.\n\nAre you sure you want to approve more credit?`)){
+                       btn.disabled=false; btn.textContent='Complete Sale →';
+                       return;
+                    }
+                 }
+              }
+           } catch(e) { console.warn('Credit check failed', e); }
+        }
+        // -----------------------------------
+
+        // Generate bill number
+        const billNumber='HR-'+Date.now().toString(36).toUpperCase();
+
+        const billData={
+          billNumber,
+          subtotal,
+          discount,
+          totalAmount:total,
+          total,
+          paymentType,
+          customerId,
+          customerName,
+          itemCount:cart.reduce((s,c)=>s+c.qty,0),
+          shopName:shop.name||'Shop'
+        };
+
+        if(paymentType === 'mixed'){
+          billData.cashReceived = parseFloat(document.getElementById('mix-cash').value)||0;
+          billData.creditAmount = Math.max(0, total - billData.cashReceived);
+          billData.creditRemaining = billData.creditAmount;
+        } else if(paymentType === 'udhaar'){
+          const isRs = document.getElementById('adv-type-rs')?.checked;
+          const advVal = parseFloat(document.getElementById('udh-advance').value)||0;
+          const advAmt = isRs ? Math.min(advVal, total) : total*(advVal/100);
+          const creditAmt = Math.max(0, total - advAmt);
+          billData.cashReceived = advAmt;
+          billData.creditAmount = creditAmt;
+          billData.advanceType = isRs ? 'Rs' : '%';
+          billData.advanceValue = advVal;
+          billData.installments = parseInt(document.getElementById('udh-inst').value)||1;
+          billData.markupType = document.getElementById('udh-markup-type').value;
+          billData.markupValue = parseFloat(document.getElementById('udh-markup-val').value)||0;
+        }
+
+        await DataService.saveBill(billData,cart);
+        toast('Sale completed! Bill #'+billNumber,'success');
+
+        // Reset
+        cart=[];
+        renderCart();
+        document.getElementById('discount-inp').value='';
+        const mc = document.getElementById('mix-cash'); if(mc) mc.value='';
+        const ui = document.getElementById('udh-inst'); if(ui) ui.value='1';
+        const umv = document.getElementById('udh-markup-val'); if(umv) umv.value='0';
+        document.getElementById('cust-sel').value='';
+        selectPay('cash', document.querySelector('.pay-btn.cash'));
+        loadProducts(); // Refresh stock
+
+      }catch(e){
+        toast('Sale failed: '+e.message,'error');
+      }finally{
+        btn.disabled=false;btn.textContent='Complete Sale →';
+      }
+    }
+
+    // Auth check & load
+    auth.onAuthStateChanged(user=>{
+      if(!user){location.href='login.html';return}
+      if(!user.emailVerified){location.href='verify-email.html';return}
+      loadProducts();
+      loadCustomers();
+    });
+  </script>
+</body>
+</html>
